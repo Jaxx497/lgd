@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import fs from "node:fs";
+import path from "node:path";
 import { Writable } from "node:stream";
 import { LibgenPlusAdapter } from "../src/api/adapters/libgen-plus-adapter";
 import type { Entry } from "../src/api/models/entry";
@@ -158,7 +159,7 @@ describe("download queue integration", () => {
       { "User-Agent": LIBGEN_USER_AGENT },
       { "User-Agent": LIBGEN_USER_AGENT },
     ]);
-    expect(createWriteStream).toHaveBeenCalledWith("success.epub");
+    expect(createWriteStream).toHaveBeenCalledWith(path.resolve("success.epub"));
     expect(Buffer.concat(downloadedChunks).toString()).toBe("downloaded content");
     expect(state.downloadProgressMap[entry.id]).toMatchObject({
       filename: "success.epub",
@@ -274,6 +275,6 @@ describe("bulk download integration", () => {
     expect(state.failedBulkDownloadItemCount).toBe(1);
     // the only write is the reservation of success.epub
     expect(writeFile).toHaveBeenCalledTimes(1);
-    expect(writeFile.mock.calls[0]?.[0].toString()).toBe("success.epub");
+    expect(writeFile.mock.calls[0]?.[0].toString()).toBe(path.resolve("success.epub"));
   });
 });

@@ -2,22 +2,24 @@ import meow from "meow";
 
 export const cli = meow(
   `
-	Usage
-	  $ lgd <input>
+  Usage
+    $ lgd [options]
 
-	Options
-    -s, --search <query>      search for a book
-    -b, --bulk <MD5LIST.txt>  start the app in bulk downloading mode
-    -u, --url <MD5>           get the download URL
-    -d, --download <MD5>      download the file
+  Options
+    -s, --search <query>      start with a search
+    -d, --download <MD5>      download one file
+    -b, --bulk <MD5LIST.txt>  download every MD5 in a file (one per line)
+    -u, --url <MD5>           print the download URL
+    -o, --output <dir>        download directory (overrides the config file)
     -h, --help                display help
 
-	Examples
-    $ lgd    (start the app in interactive mode without flags)
+  Config file: ~/.config/lgd/config.json (created on first run)
+
+  Examples
+    $ lgd
     $ lgd -s "The Art of War"
-    $ lgd -b ./MD5_LIST_1695686580524.txt
-    $ lgd -u 1234567890abcdef1234567890abcdef
-    $ lgd -d 1234567890abcdef1234567890abcdef
+    $ lgd -d 1234567890abcdef1234567890abcdef -o ~/books
+    $ lgd -b ./md5-list.txt
 `,
   {
     importMeta: import.meta,
@@ -37,6 +39,14 @@ export const cli = meow(
       download: {
         type: "string",
         shortFlag: "d",
+      },
+      ext: {
+        type: "string",
+        shortFlag: "e",
+      },
+      output: {
+        type: "string",
+        shortFlag: "o",
       },
       help: {
         type: "boolean",

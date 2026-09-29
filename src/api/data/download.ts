@@ -23,6 +23,7 @@ export function removePartialDownloads() {
 
 // Reserve `name`, or `name(1)`, `name(2)`... if taken. The `wx` flag makes check-and-create atomic.
 export async function reserveUniquePath(directory: string, filename: string): Promise<string> {
+  await fs.promises.mkdir(directory, { recursive: true });
   const { name, ext } = path.parse(filename);
   let candidate = path.join(directory, filename);
   for (let index = 1; ; index++) {

@@ -4,7 +4,7 @@ import ContentContainer from "../../components/content-container";
 import { KeyHints } from "../../components/key-hints";
 import { useBoundStore } from "../../store";
 import { useStdoutDimensions } from "../../hooks/use-stdout-dimensions";
-import { DEFAULT_COLUMNS, layoutColumns, scrollTopFor } from "../../helpers/table";
+import { layoutColumns, scrollTopFor } from "../../helpers/table";
 import { LAYOUT_KEY } from "../keys";
 import { ResultListLoadingSkeleton } from "./result-list-loading-skeleton";
 import { ResultRow } from "./result-row";
@@ -34,6 +34,7 @@ const ResultList: FC = () => {
   const backToSearch = useBoundStore((state) => state.backToSearch);
   const setDetailedEntry = useBoundStore((state) => state.setDetailedEntry);
   const setActiveLayout = useBoundStore((state) => state.setActiveLayout);
+  const tableColumns = useBoundStore((state) => state.userConfig.columns);
 
   const [columns, rows] = useStdoutDimensions();
   const [count, setCount] = useState("");
@@ -119,7 +120,7 @@ const ResultList: FC = () => {
   }
 
   const layout = layoutColumns(
-    DEFAULT_COLUMNS,
+    tableColumns,
     columns - RESERVED_COLUMNS,
     String(entries.length).length
   );

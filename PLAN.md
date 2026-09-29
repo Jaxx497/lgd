@@ -12,7 +12,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 | S2 | Remove interactive bulk selection | none | done |
 | S3 | Quit guard (`q` / `Ctrl-c`) | none | done |
 | S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | done |
-| S5 | User config file | none (S4 uses its `columns`) | todo |
+| S5 | User config file | none (S4 uses its `columns`) | done |
 | S6 | Filetype filter + drop bad results | S4, S5 | todo |
 | S7 | Downloads panel (`t`) | S4 | todo |
 | S8 | Core logic review and refactor | S1–S7 | todo |
@@ -168,6 +168,8 @@ Template:
 - Precedence: CLI flags (`-e`, `-o <dir>`) and in-app `f` override the config. `-e all` or clearing the filter means "no filter" even if the config sets one. The app never writes the config after creating it.
 - Later, if wanted: `languages`. Not planned: themes, key remapping, page size, size limits, filename templates.
 - Files: `src/user-config.ts` (new), `src/tui/store/config.ts`, `src/api/data/download.ts`, `src/cli/index.ts`, `src/cli/operate.ts`, `test/user-config.test.ts` (new: parse, comments, defaults, precedence, invalid values).
+- **Done.** Checked with a throwaway `HOME`: first run writes the template, custom `columns` and `downloadDir` (`~/books`, created on demand) take effect, an unknown column shows a warning. Config warnings go to the warning line (and stderr for `-u`). `-e` is parsed here but only filters from S6 on, so its help text lands there.
+- Not covered by an automated test: the "remote mirror list unreachable, use `mirror` alone" path, because `attempt` retries the remote fetch 5 times with 2 s delays; it is a 5-line branch in `store/config.ts` `fetchConfig`.
 
 ### S6. Filetype filter + drop bad results
 - **No server-side filter exists.** Tested against libgen.li: the search form has no extension field; `ext:pdf`, `extension:pdf`, `filetype:pdf` in the query return 0 results; extra URL parameters are ignored. Filtering is therefore client-side, on the parsed `extension`.

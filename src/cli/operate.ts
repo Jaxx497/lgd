@@ -5,8 +5,21 @@ import renderTUI from "../tui/index";
 import { LAYOUT_KEY } from "../tui/layouts/keys";
 import { useBoundStore } from "../tui/store/index";
 import { attempt } from "../utilities";
+import { applyFlags, loadUserConfig } from "../user-config";
 
 export const operate = async (flags: Record<string, unknown>) => {
+  const { config, warnings } = loadUserConfig();
+  useBoundStore
+    .getState()
+    .setUserConfig(
+      applyFlags(config, { ext: flags.ext as string | undefined, output: flags.output as string })
+    );
+  if (warnings.length > 0) {
+    // console for -u (no UI), the warning line for everything else
+    console.error(warnings.join("\n"));
+    useBoundStore.getState().setWarningMessage(warnings.join(" · "));
+  }
+
   if (flags.search) {
     const query = flags.search as string;
     if (query.length < 3) {

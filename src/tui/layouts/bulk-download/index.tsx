@@ -8,6 +8,7 @@ export function BulkDownload() {
     (state) => state.completedBulkDownloadItemCount
   );
   const failedBulkDownloadItemCount = useBoundStore((state) => state.failedBulkDownloadItemCount);
+  const downloadDirectory = useBoundStore((state) => state.userConfig.downloadDir);
   const totalItemCount = bulkDownloadQueue.length;
 
   return (
@@ -20,7 +21,7 @@ export function BulkDownload() {
         </Text>
 
         <Text color="white">
-          Downloading files to <Text color="blueBright">{process.cwd()}</Text>
+          Downloading files to <Text color="blueBright">{downloadDirectory}</Text>
         </Text>
 
         {bulkDownloadQueue.map((item, index) => (

@@ -148,6 +148,7 @@ export const createDownloadQueueStateSlice = (
 
         await downloadFile({
           downloadStream,
+          directory: store.userConfig.downloadDir,
           onStart: (filename, total) => {
             store.updateCurrentDownloadProgress(entry.id, {
               filename,

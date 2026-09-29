@@ -124,6 +124,7 @@ export const createBulkDownloadQueueStateSlice = (
         try {
           await downloadFile({
             downloadStream,
+            directory: get().userConfig.downloadDir,
             onStart: (filename, total) => {
               get().onBulkQueueItemStart(index, filename, total);
             },

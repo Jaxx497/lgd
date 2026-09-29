@@ -7,20 +7,27 @@ import { getAdapter } from "../../api/adapters";
 import { getDocument } from "../../api/data/document";
 import { SEARCH_PAGE_SIZE } from "../../settings";
 import { MirrorCheckStatus } from "./app";
+import { defaultConfig, type UserConfig } from "../../user-config";
 
 export interface IConfigState extends Config {
   mirrorAdapter: Adapter | undefined;
   mirror: Mirror | undefined;
+  userConfig: UserConfig;
+  setUserConfig: (userConfig: UserConfig) => void;
   fetchConfig: () => Promise<void>;
   switchMirror: (
     onMirrorStatus: (mirror: string, status: MirrorCheckStatus) => void
   ) => Promise<boolean>;
 }
 
-export const initialConfigState: Omit<IConfigState, "fetchConfig" | "switchMirror"> = {
+export const initialConfigState: Omit<
+  IConfigState,
+  "fetchConfig" | "switchMirror" | "setUserConfig"
+> = {
   mirrorAdapter: undefined,
   mirrors: [],
   mirror: undefined,
+  userConfig: defaultConfig(),
 };
 
 export const createConfigStateSlice = (
@@ -31,6 +38,8 @@ export const createConfigStateSlice = (
 ) => ({
   ...initialConfigState,
 
+  setUserConfig: (userConfig: UserConfig) => set({ userConfig }),
+
   fetchConfig: async () => {
     const store = get();
 
@@ -39,7 +48,14 @@ export const createConfigStateSlice = (
 
     const config = await attempt(fetchConfig);
 
-    if (!config) {
+    // The user's preferred mirror goes first, and still works if the remote list is unreachable.
+    const preferred = store.userConfig.mirror;
+    const mirrors: Mirror[] = (config?.mirrors ?? []).filter((mirror) => mirror.src !== preferred);
+    if (preferred) {
+      mirrors.unshift({ src: preferred, type: "libgen-plus" });
+    }
+
+    if (mirrors.length === 0) {
       store.setIsLoading(false);
       store.setErrorMessage("Couldn't fetch the config");
       return;
@@ -47,7 +63,7 @@ export const createConfigStateSlice = (
 
     // Find an available mirror
     store.setLoaderMessage(Label.FINDING_MIRROR);
-    const mirror = await findMirror(config.mirrors, (failedMirror: string) => {
+    const mirror = await findMirror(mirrors, (failedMirror: string) => {
       store.setLoaderMessage(
         `${Label.COULDNT_REACH_TO_MIRROR}, ${failedMirror}. ${Label.FINDING_MIRROR}`
       );
@@ -62,7 +78,7 @@ export const createConfigStateSlice = (
     const mirrorAdapter = getAdapter(mirror.src, mirror.type);
 
     set({
-      ...config,
+      mirrors,
       mirror,
       mirrorAdapter,
     });
