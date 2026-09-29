@@ -141,15 +141,9 @@ export const createAppStateSlice = (
         store.checkNextPage(store.searchValue, store.currentPage + 1);
       },
       handlePrevPageOption: store.prevPage,
-      handleStartBulkDownloadOption: store.startBulkDownload,
       handleExitOption: () => {
         if (get().inDownloadQueueEntryIds.length > 0) {
           store.setActiveLayout(LAYOUT_KEY.DOWNLOAD_QUEUE_BEFORE_EXIT_LAYOUT);
-          return;
-        }
-
-        if (Object.keys(get().bulkDownloadSelectedEntries).length > 0) {
-          store.setActiveLayout(LAYOUT_KEY.BULK_DOWNLOAD_BEFORE_EXIT_LAYOUT);
           return;
         }
 

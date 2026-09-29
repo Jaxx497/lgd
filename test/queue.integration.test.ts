@@ -174,35 +174,22 @@ describe("download queue integration", () => {
 });
 
 describe("bulk download integration", () => {
-  it("builds a bulk queue from selected entries before processing", async () => {
+  it("builds the queue from a CLI MD5 list, processes it, then exits", async () => {
     const operateBulkDownloadQueue = mock(async () => {});
-    const validEntry = createEntry("entry-1", "success");
-    const invalidEntry = { ...createEntry("entry-2", "missing"), mirror: "/ads.php" };
-    useBoundStore.setState({
-      CLIMode: true,
-      bulkDownloadSelectedEntries: {
-        valid: validEntry,
-        invalid: invalidEntry,
-      },
-      operateBulkDownloadQueue,
-    });
+    const handleExit = mock(() => {});
+    useBoundStore.setState({ CLIMode: true, operateBulkDownloadQueue, handleExit });
 
-    await useBoundStore.getState().startBulkDownload();
+    await useBoundStore.getState().startBulkDownloadInCLI(["aaa", "bbb"]);
 
-    const state = useBoundStore.getState();
-    expect(state.bulkDownloadQueue).toEqual([
-      {
-        md5: "success",
-        filename: "",
-        total: 0,
-        progress: 0,
-        status: DownloadStatus.IN_QUEUE,
-      },
+    expect(useBoundStore.getState().bulkDownloadQueue).toEqual([
+      { md5: "aaa", filename: "", total: 0, progress: 0, status: DownloadStatus.IN_QUEUE },
+      { md5: "bbb", filename: "", total: 0, progress: 0, status: DownloadStatus.IN_QUEUE },
     ]);
     expect(operateBulkDownloadQueue).toHaveBeenCalledTimes(1);
+    expect(handleExit).toHaveBeenCalledTimes(1);
   });
 
-  it("processes successful and failed items and records only completed MD5s", async () => {
+  it("processes successful and failed items without writing an MD5 list file", async () => {
     const { fetchMock, requestHeaders } = installNetworkFixture();
     const { downloadedChunks, writeFile } = installFilesystemFixture();
     useBoundStore.setState({
@@ -249,13 +236,8 @@ describe("bulk download integration", () => {
     expect(Buffer.concat(downloadedChunks).toString()).toBe("downloaded content");
     expect(state.completedBulkDownloadItemCount).toBe(1);
     expect(state.failedBulkDownloadItemCount).toBe(1);
-    expect(state.isBulkDownloadComplete).toBe(true);
-    expect(state.createdMD5ListFileName).toMatch(/^libgen_downloader_md5_list_\d+\.txt$/);
-    // call 0 reserves success.epub, call 1 writes the MD5 list
-    expect(writeFile).toHaveBeenCalledTimes(2);
-    expect(writeFile.mock.calls[1]?.[0].toString()).toMatch(
-      /^\.\/libgen_downloader_md5_list_\d+\.txt$/
-    );
-    expect(writeFile.mock.calls[1]?.[1]).toBe("success");
+    // the only write is the reservation of success.epub
+    expect(writeFile).toHaveBeenCalledTimes(1);
+    expect(writeFile.mock.calls[0]?.[0].toString()).toBe("success.epub");
   });
 });

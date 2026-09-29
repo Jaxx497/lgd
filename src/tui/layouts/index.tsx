@@ -6,7 +6,6 @@ import ResultList from "./result-list/index";
 import { ResultListContextProvider } from "../contexts/result-list-context";
 import Detail from "./detail/index";
 import { BulkDownload } from "./bulk-download";
-import { BulkDownloadBeforeExit } from "./bulk-download-before-exit";
 import { DownloadQueueBeforeExit } from "./download-queue-before-exit";
 
 const Layouts: FC = () => {
@@ -28,10 +27,6 @@ const Layouts: FC = () => {
 
       <Layout layoutName={LAYOUT_KEY.BULK_DOWNLOAD_LAYOUT}>
         <BulkDownload />
-      </Layout>
-
-      <Layout layoutName={LAYOUT_KEY.BULK_DOWNLOAD_BEFORE_EXIT_LAYOUT}>
-        <BulkDownloadBeforeExit />
       </Layout>
 
       <Layout layoutName={LAYOUT_KEY.DOWNLOAD_QUEUE_BEFORE_EXIT_LAYOUT}>

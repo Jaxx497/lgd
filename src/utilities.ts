@@ -95,7 +95,6 @@ interface constructInitialListItemsArguments {
   handleNextPageOption: () => void;
   handleRetryNextPageOption: () => void;
   handlePrevPageOption: () => void;
-  handleStartBulkDownloadOption: () => void;
   handleExitOption: () => void;
 }
 
@@ -142,7 +141,6 @@ export const constructListItems = ({
   handleNextPageOption,
   handleRetryNextPageOption,
   handlePrevPageOption,
-  handleStartBulkDownloadOption,
   handleExitOption,
 }: constructInitialListItemsArguments) => {
   const entryListItems: ListItem[] = entries.map<ListItem>((entry, index) => ({
@@ -164,12 +162,6 @@ export const constructListItems = ({
       }
       return [];
     })(),
-
-    createOptionItem(
-      Option.START_BULK_DOWNLOAD,
-      Label.START_BULK_DOWNLOAD,
-      handleStartBulkDownloadOption
-    ),
 
     createOptionItem(Option.EXIT, Label.EXIT, handleExitOption),
     ...entryListItems.slice(0, entryListItems.length - RESULT_LIST_ACTIVE_LIST_INDEX),

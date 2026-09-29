@@ -9,7 +9,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 | S0 | Ponytail cleanup of existing code | none | done |
 | S0b | Rename to `lgd`, version 1.0.0, keep attribution | S0 | done |
 | S1 | Never overwrite files (`name(1).ext`) | none | done |
-| S2 | Remove interactive bulk selection | none | todo |
+| S2 | Remove interactive bulk selection | none | done |
 | S3 | Quit guard (`q` / `Ctrl-c`) | none | todo |
 | S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | todo |
 | S5 | User config file | none (S4 uses its `columns`) | todo |
@@ -59,6 +59,7 @@ Your original six goals map to: (1) filetype filter → S6, (2) more screen → 
 - Keep: `store/bulk-download-queue.ts` (minus selection state) and the `bulk-download` layout, because CLI `-b` uses `startBulkDownloadInCLI`.
 - Files: `src/tui/store/bulk-download-queue.ts`, `src/tui/layouts/bulk-download-before-exit/`, `src/tui/layouts/detail/detail-entry-options.tsx`, `src/tui/layouts/result-list/result-list-item-entry.tsx`, `src/tui/components/result-list-info.tsx`, `src/labels.ts`, `src/options.ts`, `package.json`, `bun.lock`, `test/queue.integration.test.ts`, `test/search.integration.test.ts`, `README.md`.
 - Done when: `-b` still works (test), no `object-hash` in tree, `bun run build` passes.
+- **Done.** Verified with a real `-b` run: file downloaded, no MD5 list written. `-d` did write the list before (confirmed in S1 smoke test); it no longer does. The five per-item store handlers now share one `updateItem` helper.
 
 ### S3. Quit guard
 - Change: one `requestQuit()` used by both `q` and `Ctrl-c`. Render Ink with `exitOnCtrlC: false`; a global input handler calls `requestQuit()` on `q` and on `Ctrl-c`.
@@ -198,6 +199,7 @@ Purpose: the code was written by someone else; check the core logic for bugs, wa
   - `setSearchValue` hardcodes `3` instead of `SEARCH_MIN_CHAR`.
   - `clearText` keeps only the first line and strips HTML tags from `textContent`, which is already plain text.
   - The store-slice `set` type is repeated in every slice file.
+  - CLI `-b`/`-d`: the process exits before the final frame renders, so the screen ends on `DOWNLOADING 100%` / `COMPLETED (0)`.
   - Mirror failover/switching paths (`switchMirror`, `findMirror`) and `warningTimeout` in the store are worth a look for races.
 - **Done when:** each scope item has a written verdict (fixed / no change / deferred with reason), tests cover each fix, and typecheck, lint, tests and build pass.
 
