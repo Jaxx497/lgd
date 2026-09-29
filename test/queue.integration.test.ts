@@ -158,7 +158,7 @@ describe("download queue integration", () => {
       { "User-Agent": LIBGEN_USER_AGENT },
       { "User-Agent": LIBGEN_USER_AGENT },
     ]);
-    expect(createWriteStream).toHaveBeenCalledWith("./success.epub");
+    expect(createWriteStream).toHaveBeenCalledWith("success.epub");
     expect(Buffer.concat(downloadedChunks).toString()).toBe("downloaded content");
     expect(state.downloadProgressMap[entry.id]).toMatchObject({
       filename: "success.epub",
@@ -251,10 +251,11 @@ describe("bulk download integration", () => {
     expect(state.failedBulkDownloadItemCount).toBe(1);
     expect(state.isBulkDownloadComplete).toBe(true);
     expect(state.createdMD5ListFileName).toMatch(/^libgen_downloader_md5_list_\d+\.txt$/);
-    expect(writeFile).toHaveBeenCalledTimes(1);
-    expect(writeFile.mock.calls[0]?.[0].toString()).toMatch(
+    // call 0 reserves success.epub, call 1 writes the MD5 list
+    expect(writeFile).toHaveBeenCalledTimes(2);
+    expect(writeFile.mock.calls[1]?.[0].toString()).toMatch(
       /^\.\/libgen_downloader_md5_list_\d+\.txt$/
     );
-    expect(writeFile.mock.calls[0]?.[1]).toBe("success");
+    expect(writeFile.mock.calls[1]?.[1]).toBe("success");
   });
 });

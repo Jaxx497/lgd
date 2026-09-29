@@ -1,5 +1,6 @@
 import contentDisposition from "content-disposition";
 import fs from "node:fs";
+import path from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { DownloadResult } from "../models/download-result";
@@ -8,12 +9,31 @@ interface downloadFileArguments {
   downloadStream: Response;
   onStart: (filename: string, total: number) => void;
   onData: (filename: string, chunk: Buffer, total: number) => void;
+  directory?: string;
+}
+
+// Reserve `name`, or `name(1)`, `name(2)`... if taken. The `wx` flag makes check-and-create atomic.
+export async function reserveUniquePath(directory: string, filename: string): Promise<string> {
+  const { name, ext } = path.parse(filename);
+  let candidate = path.join(directory, filename);
+  for (let index = 1; ; index++) {
+    try {
+      await fs.promises.writeFile(candidate, "", { flag: "wx" });
+      return candidate;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+        throw error;
+      }
+    }
+    candidate = path.join(directory, `${name}(${index})${ext}`);
+  }
 }
 
 export const downloadFile = async ({
   downloadStream,
   onStart,
   onData,
+  directory = ".",
 }: downloadFileArguments): Promise<DownloadResult> => {
   const MAX_FILE_NAME_LENGTH = 128;
 
@@ -23,18 +43,19 @@ export const downloadFile = async ({
   }
 
   const parsedContentDisposition = contentDisposition.parse(downloadContentDisposition);
-  const fullFileName = parsedContentDisposition.parameters.filename;
-  const slicedFileName = fullFileName.slice(
-    Math.max(fullFileName.length - MAX_FILE_NAME_LENGTH, 0)
-  );
-  const path = `./${slicedFileName}`;
+  // basename: the name comes from the mirror, never let it escape `directory`
+  const fullFileName = path.basename(parsedContentDisposition.parameters.filename);
+  const { name, ext } = path.parse(fullFileName);
+  const slicedFileName = name.slice(0, MAX_FILE_NAME_LENGTH - ext.length) + ext;
 
   const total = Number(downloadStream.headers.get("content-length") || 0);
-  const filename = parsedContentDisposition.parameters.filename;
 
   if (!downloadStream.body) {
     throw new Error("No response body");
   }
+
+  const filePath = await reserveUniquePath(directory, slicedFileName);
+  const filename = path.basename(filePath);
 
   onStart(filename, total);
 
@@ -50,17 +71,18 @@ export const downloadFile = async ({
     await pipeline(
       Readable.from(downloadStream.body, { objectMode: false }),
       progressStream,
-      fs.createWriteStream(path)
+      fs.createWriteStream(filePath)
     );
 
     const downloadResult: DownloadResult = {
-      path,
+      path: filePath,
       filename,
       total,
     };
 
     return downloadResult;
   } catch {
+    await fs.promises.rm(filePath, { force: true });
     throw new Error(`(${filename}) Error occurred while downloading file`);
   }
 };

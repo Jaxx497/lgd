@@ -8,7 +8,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 |----|------|-----------|--------|
 | S0 | Ponytail cleanup of existing code | none | done |
 | S0b | Rename to `lgd`, version 1.0.0, keep attribution | S0 | done |
-| S1 | Never overwrite files (`name(1).ext`) | none | todo |
+| S1 | Never overwrite files (`name(1).ext`) | none | done |
 | S2 | Remove interactive bulk selection | none | todo |
 | S3 | Quit guard (`q` / `Ctrl-c`) | none | todo |
 | S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | todo |
@@ -50,7 +50,8 @@ Your original six goals map to: (1) filetype filter → S6, (2) more screen → 
 - Applies to TUI and CLI (`-d`, `-b`) since they share `downloadFile`. Returned `path`/`filename` must be the final name.
 - Files: `src/api/data/download.ts`, `test/download.test.ts`.
 - Done when: tests cover existing file → `(1)`, existing `(1)` → `(2)`, no-extension name, 128-char truncation still keeps the extension and fits the suffix.
-- Note for S5: path becomes `<downloadDir>/<name>` there.
+- Note for S5: path becomes `<downloadDir>/<name>` there (`downloadFile` now takes `directory`).
+- **Done, plus:** the mirror's filename goes through `path.basename` (no `../` escape); a failed download deletes its partial file; long names are cut from the end instead of the start (the old code produced names like `ies (New York N.Y.) 1] Sun Tzu…`). Smoke-tested a real `-d` twice with User-Agent `lgd/1.0.0`: second run saved `…(1).epub`.
 
 ### S2. Remove interactive bulk selection
 - Remove: Tab toggle and ✓ marks, bulk count in header, "Start Bulk Download" row, `bulk-download-before-exit` layout, bulk option in `detail-entry-options.tsx`, related `Label`/`Option`/enum entries, `bulkDownloadSelectedEntries` and add/remove actions, `object-hash` and `@types/object-hash`.
