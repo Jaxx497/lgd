@@ -1,5 +1,5 @@
 import type { GetState, SetState } from "./index";
-import { DownloadStatus } from "../../download-statuses";
+import { DownloadStatus } from "../../download-status";
 import { attempt, delay } from "../../utilities";
 import { IDownloadProgress } from "./download-queue";
 import { getDocument } from "../../api/data/document";

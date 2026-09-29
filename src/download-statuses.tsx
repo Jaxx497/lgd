@@ -1,15 +1,6 @@
 import { Text } from "ink";
 
-export enum DownloadStatus {
-  IDLE = "IDLE",
-  IN_QUEUE = "IN_QUEUE",
-  PROCESSING = "PROCESSING",
-  DOWNLOADING = "DOWNLOADING",
-  DOWNLOADED = "DOWNLOADED",
-  FAILED = "FAILED",
-  CONNECTING_TO_LIBGEN = "CONNECTING_TO_LIBGEN",
-  FETCHING_MD5 = "FETCHING_MD5",
-}
+import { DownloadStatus } from "./download-status";
 
 export const downloadStatusIndicators = {
   [DownloadStatus.IDLE]: undefined,
@@ -56,3 +47,5 @@ export const downloadStatusIndicators = {
     </Text>
   ),
 };
+
+export { DownloadStatus } from "./download-status";

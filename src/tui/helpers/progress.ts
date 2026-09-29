@@ -1,5 +1,5 @@
 import { filesize } from "filesize";
-import { DownloadStatus } from "../../download-statuses";
+import { DownloadStatus } from "../../download-status";
 import type { IDownloadProgress } from "../store/download-queue";
 
 export const getDownloadProgress = (progress: number, total: number) => {

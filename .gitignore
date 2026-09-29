@@ -12,3 +12,5 @@
 *.tgz
 
 ws.session
+www
+/android

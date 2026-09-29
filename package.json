@@ -24,7 +24,8 @@
     "lint:fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx,json}' 'test/**/*.ts'",
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,md,json}' 'test/**/*.ts' --config ./.prettierrc",
     "format:check": "prettier --check 'src/**/*.{js,jsx,ts,tsx,css,md,json}' 'test/**/*.ts' --config ./.prettierrc",
-    "clean": "rimraf ./build && rimraf ./standalone-executables"
+    "clean": "rimraf ./build && rimraf ./standalone-executables",
+    "web": "bun run scripts/build-web.ts"
   },
   "keywords": [
     "libgen",
@@ -49,11 +50,14 @@
     "url": "https://github.com/Jaxx497/libgen-downloader.git"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
     "@eslint/js": "^10.0.1",
     "@types/bun": "^1.3.14",
     "@types/content-disposition": "^0.5.9",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.52.0",
     "eslint": "^9.39.2",
@@ -67,6 +71,10 @@
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/file-transfer": "^2.0.5",
+    "@capacitor/filesystem": "^8.1.3",
+    "@capacitor/share": "^8.0.2",
     "content-disposition": "^1.0.1",
     "figures": "^6.1.0",
     "filesize": "^11.0.13",
@@ -76,6 +84,7 @@
     "linkedom": "^0.18.12",
     "meow": "^14.0.0",
     "react": "^19.2.3",
+    "react-dom": "^19.3.0",
     "zustand": "^5.0.9"
   }
 }

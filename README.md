@@ -17,6 +17,15 @@ bun run compile:linux-x64   # or compile:macos-arm64, compile:windows-x64, ...
 
 The binary is written to `standalone-executables/lgd-<os>-<arch>`.
 
+## Android
+
+A small Capacitor app shares the search and download logic with the TUI (`src/mobile/`).
+The **Android APK** workflow builds a debug APK on GitHub; run it from the Actions tab and
+download `lgd-debug-apk`. Locally, `bun run web` bundles the UI into `www/`.
+
+Downloads land in the app cache and open the Android share sheet via **Save**, since Android
+blocks direct writes to Downloads.
+
 ## Usage
 
 ```

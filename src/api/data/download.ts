@@ -4,6 +4,8 @@ import path from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { DownloadResult } from "../models/download-result";
+import { attempt } from "../../utilities";
+import { fetchLibgen } from "./request";
 
 interface downloadFileArguments {
   downloadStream: Response;
@@ -99,3 +101,24 @@ export const downloadFile = async ({
     inProgressPaths.delete(filePath);
   }
 };
+
+// The queue's one save step. The mobile build swaps this module for download.web.ts, which hands
+// the URL to the OS instead of streaming it through fetch.
+export async function saveFromUrl(arguments_: {
+  url: string;
+  directory: string;
+  filename: string; // ignored here: the mirror's content-disposition names the file
+  onStart: (filename: string, total: number) => void;
+  onProgress: (bytes: number) => void;
+}): Promise<void> {
+  const downloadStream = await attempt((signal) => fetchLibgen(arguments_.url, signal));
+  if (!downloadStream) {
+    throw new Error("Couldn't fetch the download stream");
+  }
+  await downloadFile({
+    downloadStream,
+    directory: arguments_.directory,
+    onStart: arguments_.onStart,
+    onData: (_filename, chunk) => arguments_.onProgress(chunk.length),
+  });
+}

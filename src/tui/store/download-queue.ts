@@ -1,10 +1,9 @@
 import type { GetState, SetState } from "./index";
 import { Entry } from "../../api/models/entry";
-import { DownloadStatus } from "../../download-statuses";
+import { DownloadStatus } from "../../download-status";
 import { attempt } from "../../utilities";
 import { getDocument } from "../../api/data/document";
-import { downloadFile } from "../../api/data/download";
-import { fetchLibgen } from "../../api/data/request";
+import { saveFromUrl } from "../../api/data/download";
 
 export interface IDownloadProgress {
   filename: string;
@@ -127,24 +126,18 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
           throw new Error(`Couldn't find the download url for "${entry.title}"`);
         }
 
-        const downloadStream = await attempt((signal) => fetchLibgen(downloadUrl, signal));
-        if (!downloadStream) {
-          throw new Error(`Couldn't fetch the download stream for "${entry.title}"`);
-        }
-
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.DOWNLOADING,
         });
 
-        await downloadFile({
-          downloadStream,
+        await saveFromUrl({
+          url: downloadUrl,
           directory: get().userConfig.downloadDir,
+          filename: `${entry.title}.${entry.extension}`,
           onStart: (filename, total) => {
             store.updateCurrentDownloadProgress(entry.id, { filename, progress: 0, total });
           },
-          onData: (_filename, chunk) => {
-            store.addDownloadProgress(entry.id, chunk.length);
-          },
+          onProgress: (bytes) => store.addDownloadProgress(entry.id, bytes),
         });
 
         store.updateCurrentDownloadProgress(entry.id, {
