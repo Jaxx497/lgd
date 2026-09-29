@@ -31,6 +31,20 @@ describe("configuration data", () => {
     );
   });
 
+  it("skips a mirror that answers with an HTTP error", async () => {
+    spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response("Bad Gateway", { status: 502 }))
+      .mockResolvedValueOnce(new Response("ok"));
+    const mirrors = [
+      { src: "https://down.example/", type: "libgen-plus" as const },
+      { src: "https://up.example/", type: "libgen-plus" as const },
+    ];
+
+    await expect(
+      findMirror(mirrors, () => {}, { attemptCount: 1, delayMs: 0, timeoutMs: 100 })
+    ).resolves.toEqual(mirrors[1]);
+  });
+
   it("selects the first reachable mirror and reports failed mirrors", async () => {
     const onMirrorFail = mock(() => {});
     const fetchMock = spyOn(globalThis, "fetch")
@@ -71,8 +85,7 @@ describe("document data", () => {
       headers: { "User-Agent": LIBGEN_USER_AGENT },
       signal,
     });
-    expect(result.htmlString).toContain("Example Book");
-    expect(result.document.querySelector("#title")?.textContent).toBe("Example Book");
+    expect(result.querySelector("#title")?.textContent).toBe("Example Book");
   });
 
   it("wraps document transport errors with the requested URL", async () => {
@@ -80,6 +93,16 @@ describe("document data", () => {
 
     await expect(
       getDocument("https://mirror.example/book", new AbortController().signal)
-    ).rejects.toThrow("Error occured while fetching document of https://mirror.example/book");
+    ).rejects.toThrow("Error occurred while fetching document of https://mirror.example/book");
+  });
+
+  it("treats an HTTP error page as a failure, not as an empty page", async () => {
+    spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("<html>Service Unavailable</html>", { status: 503 })
+    );
+
+    await expect(
+      getDocument("https://mirror.example/index.php", new AbortController().signal)
+    ).rejects.toThrow("Error occurred while fetching document");
   });
 });

@@ -1,31 +1,25 @@
 import { Entry } from "../models/entry";
-import { Adapter } from "./adapter";
-import { nanoid } from "nanoid";
 import { clearText } from "../../utilities";
 
-export class LibgenPlusAdapter implements Adapter {
+export class LibgenPlusAdapter {
   baseURL: string;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
   }
 
-  parseEntries(document: Document, throwError?: (message: string) => void): Entry[] | undefined {
+  parseEntries(document: Document): Entry[] {
     const entries: Entry[] = [];
     const containerTable = document.querySelector<HTMLTableElement>("#tablelibgen > tbody");
 
+    // no table: no results
     if (!containerTable) {
-      if (throwError) {
-        throwError("containerTable is undefined");
-      }
       return [];
     }
 
-    // Get rid of table header by slicing it
     const entryElements = containerTable.children;
 
     for (const element of entryElements) {
-      const id = nanoid();
       const authors = clearText(element.children[1]?.textContent || "")
         .split(";")
         .map((author) => author.trim())
@@ -44,6 +38,8 @@ export class LibgenPlusAdapter implements Adapter {
       const extension = clearText(element.children[7]?.textContent || "");
       const mirror =
         element.children[8]?.getElementsByTagName("a")?.[0]?.getAttribute("href") || "";
+      // The file's md5 is stable across re-parses (the download state is keyed by it).
+      const id = /md5=([\da-f]{32})/i.exec(mirror)?.[1] ?? mirror;
       entries.push({
         id,
         authors,
@@ -80,18 +76,12 @@ export class LibgenPlusAdapter implements Adapter {
     return url.toString();
   }
 
-  getMainDownloadURLFromDocument(
-    document: Document,
-    throwError?: (message: string) => void
-  ): string | undefined {
+  getMainDownloadURLFromDocument(document: Document): string | undefined {
     const downloadLinkElement = document.querySelector(
       "#main > tr:first-child > td:nth-child(2) > a"
     );
 
     if (!downloadLinkElement) {
-      if (throwError) {
-        throwError("downloadLinkElement is undefined");
-      }
       return undefined;
     }
 

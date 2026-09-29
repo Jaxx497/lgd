@@ -12,9 +12,6 @@ export interface AttemptOptions {
   attemptCount?: number;
   delayMs?: number;
   timeoutMs?: number;
-  onFail?: (message: string) => void;
-  onError?: (message: string) => void;
-  onComplete?: () => void;
 }
 
 export async function attempt<T>(
@@ -28,32 +25,16 @@ export async function attempt<T>(
   for (let index = 0; index < attemptCount; index++) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    let failure: unknown;
 
     try {
-      const result = await callback(controller.signal);
-
-      if (options.onComplete) {
-        options.onComplete();
-      }
-
-      return result;
-    } catch (error: unknown) {
-      failure = error;
+      return await callback(controller.signal);
+    } catch {
+      // retried below
     } finally {
       clearTimeout(timeout);
     }
 
-    if (options.onFail) {
-      options.onFail(`Request failed, trying again ${index + 1}/${attemptCount}`);
-    }
-
-    const isLastAttempt = index + 1 === attemptCount;
-    if (isLastAttempt) {
-      if (options.onError) {
-        options.onError((failure as Error)?.message);
-      }
-    } else {
+    if (index + 1 < attemptCount) {
       await delay(delayMs);
     }
   }
@@ -63,9 +44,7 @@ export async function attempt<T>(
 
 export function clearText(text: string): string {
   return text
-    .split("\n")[0]
-    .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/g, "")
-    .replaceAll(/<[^>]+>/g, "")
+    .split("\n")[0] // later lines hold image sizes / ISBNs
     .replaceAll(/\s+/g, " ")
     .trim();
 }

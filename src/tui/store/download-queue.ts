@@ -126,7 +126,7 @@ export const createDownloadQueueStateSlice = (
         }
 
         const downloadUrl = store.mirrorAdapter?.getMainDownloadURLFromDocument(
-          mirrorPageResult.document
+          mirrorPageResult
         );
         if (!downloadUrl) {
           throw new Error(`Couldn't find the download url for "${entry.title}"`);

@@ -71,12 +71,12 @@ export const createEventActionsSlice = (
       return { status: "error", message: `Couldn't fetch the search page for "${query}"` };
     }
 
-    const connectionError = get().mirrorAdapter?.detectConnectionError(pageDocumentResult.document);
+    const connectionError = get().mirrorAdapter?.detectConnectionError(pageDocumentResult);
     if (connectionError) {
       return { status: "connection_error", message: connectionError };
     }
 
-    const entries = get().mirrorAdapter?.parseEntries(pageDocumentResult.document);
+    const entries = get().mirrorAdapter?.parseEntries(pageDocumentResult);
     if (!entries) {
       return { status: "error", message: `Couldn't parse the search page for "${query}"` };
     }
@@ -96,6 +96,7 @@ export const createEventActionsSlice = (
     }
 
     const results: Entry[] = [];
+    const seen = new Set<string>(); // the same file can be listed in more than one chunk
     let newRequests = 0;
     for (let chunk = 1; ; chunk++) {
       const url = get().mirrorAdapter?.getSearchURL(searchValue, chunk, chunkSize) ?? "";
@@ -112,7 +113,12 @@ export const createEventActionsSlice = (
         newRequests++;
       }
 
-      results.push(...usableResults(result.entries, filter));
+      for (const entry of usableResults(result.entries, filter)) {
+        if (!seen.has(entry.id)) {
+          seen.add(entry.id);
+          results.push(entry);
+        }
+      }
       if (result.entries.length < chunkSize) {
         return { status: "success", results, exhausted: true };
       }

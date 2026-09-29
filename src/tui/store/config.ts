@@ -2,15 +2,14 @@ import { TCombinedStore } from "./index";
 import { Config, fetchConfig, findMirror, Mirror } from "../../api/data/config";
 import Label from "../../labels";
 import { attempt } from "../../utilities";
-import { Adapter } from "../../api/adapters/adapter";
-import { getAdapter } from "../../api/adapters";
+import { LibgenPlusAdapter } from "../../api/adapters/libgen-plus-adapter";
 import { getDocument } from "../../api/data/document";
 import { SEARCH_PAGE_SIZE } from "../../settings";
 import { MirrorCheckStatus } from "./app";
 import { defaultConfig, type UserConfig } from "../../user-config";
 
 export interface IConfigState extends Config {
-  mirrorAdapter: Adapter | undefined;
+  mirrorAdapter: LibgenPlusAdapter | undefined;
   mirror: Mirror | undefined;
   userConfig: UserConfig;
   filter: string[];
@@ -54,7 +53,10 @@ export const createConfigStateSlice = (
 
     // The user's preferred mirror goes first, and still works if the remote list is unreachable.
     const preferred = store.userConfig.mirror;
-    const mirrors: Mirror[] = (config?.mirrors ?? []).filter((mirror) => mirror.src !== preferred);
+    const mirrors: Mirror[] = (config?.mirrors ?? []).filter(
+      // libgen-plus is the only mirror type lgd can parse
+      (mirror) => mirror.type === "libgen-plus" && mirror.src !== preferred
+    );
     if (preferred) {
       mirrors.unshift({ src: preferred, type: "libgen-plus" });
     }
@@ -79,7 +81,7 @@ export const createConfigStateSlice = (
       return;
     }
 
-    const mirrorAdapter = getAdapter(mirror.src, mirror.type);
+    const mirrorAdapter = new LibgenPlusAdapter(mirror.src);
 
     set({
       mirrors,
@@ -103,14 +105,14 @@ export const createConfigStateSlice = (
       onMirrorStatus(mirror.src, "checking");
 
       try {
-        const adapter = getAdapter(mirror.src, mirror.type);
+        const adapter = new LibgenPlusAdapter(mirror.src);
         const testURL = adapter.getSearchURL("test", 1, SEARCH_PAGE_SIZE);
         const result = await attempt((signal) => getDocument(testURL, signal));
         if (!result) {
           onMirrorStatus(mirror.src, "failed");
           continue;
         }
-        const connectionError = adapter.detectConnectionError(result.document);
+        const connectionError = adapter.detectConnectionError(result);
 
         if (connectionError) {
           onMirrorStatus(mirror.src, "failed");

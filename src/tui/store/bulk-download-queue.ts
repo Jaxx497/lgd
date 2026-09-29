@@ -106,7 +106,7 @@ export const createBulkDownloadQueueStateSlice = (
         }
 
         const downloadUrl = get().mirrorAdapter?.getMainDownloadURLFromDocument(
-          detailPageResult.document
+          detailPageResult
         );
         if (!downloadUrl) {
           get().setWarningMessage(`Couldn't find the download url for ${item.md5}`);
