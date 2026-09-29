@@ -1,4 +1,4 @@
-import { TCombinedStore } from "./index";
+import type { GetState, SetState } from "./index";
 import { Entry } from "../../api/models/entry";
 import { DownloadStatus } from "../../download-statuses";
 import { attempt } from "../../utilities";
@@ -29,6 +29,7 @@ export interface IDownloadQueueState {
     entryId: string,
     downloadProgress: Partial<IDownloadProgress>
   ) => void;
+  addDownloadProgress: (entryId: string, bytes: number) => void;
   removeQueuedDownload: (entryId: string) => void;
   clearFinishedDownloads: () => void;
 }
@@ -41,12 +42,7 @@ export const initialDownloadQueueState = {
   isQueueActive: false,
 };
 
-export const createDownloadQueueStateSlice = (
-  set: (
-    partial: Partial<TCombinedStore> | ((state: TCombinedStore) => Partial<TCombinedStore>)
-  ) => void,
-  get: () => TCombinedStore
-) => ({
+export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => ({
   ...initialDownloadQueueState,
 
   pushDownloadQueue: (entry: Entry) => {
@@ -115,7 +111,8 @@ export const createDownloadQueueStateSlice = (
           status: DownloadStatus.CONNECTING_TO_LIBGEN,
         });
 
-        const detailPageUrl = store.mirrorAdapter?.getPageURL(entry.mirror);
+        // read the adapter per download: the mirror may have been switched meanwhile
+        const detailPageUrl = get().mirrorAdapter?.getPageURL(entry.mirror);
         if (!detailPageUrl) {
           throw new Error(`Couldn't get the detail page URL for "${entry.title}"`);
         }
@@ -125,7 +122,7 @@ export const createDownloadQueueStateSlice = (
           throw new Error(`Couldn't fetch the mirror page for "${entry.title}"`);
         }
 
-        const downloadUrl = store.mirrorAdapter?.getMainDownloadURLFromDocument(
+        const downloadUrl = get().mirrorAdapter?.getMainDownloadURLFromDocument(
           mirrorPageResult
         );
         if (!downloadUrl) {
@@ -143,20 +140,12 @@ export const createDownloadQueueStateSlice = (
 
         await downloadFile({
           downloadStream,
-          directory: store.userConfig.downloadDir,
+          directory: get().userConfig.downloadDir,
           onStart: (filename, total) => {
-            store.updateCurrentDownloadProgress(entry.id, {
-              filename,
-              progress: undefined,
-              total,
-            });
+            store.updateCurrentDownloadProgress(entry.id, { filename, progress: 0, total });
           },
-          onData: (filename, chunk, total) => {
-            store.updateCurrentDownloadProgress(entry.id, {
-              filename,
-              progress: chunk.length,
-              total,
-            });
+          onData: (_filename, chunk) => {
+            store.addDownloadProgress(entry.id, chunk.length);
           },
         });
 
@@ -183,24 +172,21 @@ export const createDownloadQueueStateSlice = (
     set((previous) => ({
       downloadProgressMap: {
         ...previous.downloadProgressMap,
-        [entryId]: {
-          ...previous.downloadProgressMap[entryId],
-          ...downloadProgress,
-          progress: (() => {
-            if (!("progress" in downloadProgress)) {
-              return previous.downloadProgressMap[entryId]?.progress;
-            }
-            if (downloadProgress.progress === undefined) {
-              return 0;
-            }
-            return (
-              (previous.downloadProgressMap[entryId]?.progress || 0) +
-              (downloadProgress.progress || 0)
-            );
-          })(),
-        },
+        [entryId]: { ...previous.downloadProgressMap[entryId], ...downloadProgress },
       },
     }));
+  },
+
+  addDownloadProgress: (entryId: string, bytes: number) => {
+    set((previous) => {
+      const current = previous.downloadProgressMap[entryId];
+      return {
+        downloadProgressMap: {
+          ...previous.downloadProgressMap,
+          [entryId]: { ...current, progress: (current?.progress || 0) + bytes },
+        },
+      };
+    });
   },
 
   // Only waiting downloads can be removed; the active one has no abort hook.

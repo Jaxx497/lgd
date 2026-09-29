@@ -250,7 +250,7 @@ describe("bulk download integration", () => {
       { md5: "bbb", filename: "", total: 0, progress: 0, status: DownloadStatus.IN_QUEUE },
     ]);
     expect(operateBulkDownloadQueue).toHaveBeenCalledTimes(1);
-    expect(handleExit).toHaveBeenCalledTimes(1);
+    expect(handleExit).toHaveBeenCalledWith(0);
   });
 
   it("processes successful and failed items without writing an MD5 list file", async () => {

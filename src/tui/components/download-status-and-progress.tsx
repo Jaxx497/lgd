@@ -16,7 +16,7 @@ export function DownloadStatusAndProgress({ downloadProgressData }: Properties) 
   return (
     <Text>
       {downloadStatusIndicators[downloadProgressData.status]}{" "}
-      {downloadProgressData.status !== DownloadStatus.DOWNLOADED && (
+      {downloadProgressData.status === DownloadStatus.DOWNLOADING && (
         <>
           <Text color="white">
             {downloadProgress?.progressPercentage}% {downloadProgress?.downloadedSize} /{" "}

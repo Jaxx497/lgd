@@ -1,4 +1,4 @@
-import { TCombinedStore } from "./index";
+import type { GetState, SetState } from "./index";
 import { Entry } from "../../api/models/entry";
 
 export interface ICacheState {
@@ -11,12 +11,7 @@ export const initialCacheState = {
   entryCacheMap: {},
 };
 
-export const createCacheStateSlice = (
-  set: (
-    partial: Partial<TCombinedStore> | ((state: TCombinedStore) => Partial<TCombinedStore>)
-  ) => void,
-  get: () => TCombinedStore
-) => ({
+export const createCacheStateSlice = (set: SetState, get: GetState) => ({
   ...initialCacheState,
 
   setEntryCacheMap: (searchURL: string, entryList: Entry[]) => {

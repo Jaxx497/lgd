@@ -1,6 +1,6 @@
-import { TCombinedStore } from "./index";
+import type { GetState, SetState } from "./index";
 import { DownloadStatus } from "../../download-statuses";
-import { attempt } from "../../utilities";
+import { attempt, delay } from "../../utilities";
 import { IDownloadProgress } from "./download-queue";
 import { getDocument } from "../../api/data/document";
 import { downloadFile } from "../../api/data/download";
@@ -33,12 +33,7 @@ export const initialBulkDownloadQueueState = {
   bulkDownloadQueue: [],
 };
 
-export const createBulkDownloadQueueStateSlice = (
-  set: (
-    partial: Partial<TCombinedStore> | ((state: TCombinedStore) => Partial<TCombinedStore>)
-  ) => void,
-  get: () => TCombinedStore
-) => {
+export const createBulkDownloadQueueStateSlice = (set: SetState, get: GetState) => {
   const updateItem = (
     index: number,
     patch: (item: IBulkDownloadQueueItem) => Partial<IBulkDownloadQueueItem>
@@ -153,7 +148,9 @@ export const createBulkDownloadQueueStateSlice = (
 
       await get().operateBulkDownloadQueue();
 
-      get().handleExit();
+      // ponytail: fixed pause so Ink paints the final counts before exiting; Ink throttles renders
+      await delay(200);
+      get().handleExit(Number(get().failedBulkDownloadItemCount > 0));
     },
   };
 };

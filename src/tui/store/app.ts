@@ -1,4 +1,4 @@
-import { TCombinedStore } from "./index";
+import type { GetState, SetState } from "./index";
 import { Entry } from "../../api/models/entry";
 import { LAYOUT_KEY } from "../layouts/keys";
 import { clearScreen } from "../helpers/screen";
@@ -88,12 +88,7 @@ export const initialAppState = {
   mirrorCheckStates: [] as MirrorCheckState[],
 };
 
-export const createAppStateSlice = (
-  set: (
-    partial: Partial<TCombinedStore> | ((state: TCombinedStore) => Partial<TCombinedStore>)
-  ) => void,
-  get: () => TCombinedStore
-) => ({
+export const createAppStateSlice = (set: SetState, get: GetState) => ({
   CLIMode: false,
   setCLIMode: (CLIMode: boolean) => set({ CLIMode }),
 

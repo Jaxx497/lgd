@@ -13,6 +13,12 @@ export type TCombinedStore = IAppState &
   ICacheState &
   IEventActions;
 
+// Every slice receives the combined store's set/get.
+export type SetState = (
+  partial: Partial<TCombinedStore> | ((state: TCombinedStore) => Partial<TCombinedStore>)
+) => void;
+export type GetState = () => TCombinedStore;
+
 export const useBoundStore = create<TCombinedStore>((set, get) => ({
   ...createAppStateSlice(set, get),
   ...createConfigStateSlice(set, get),

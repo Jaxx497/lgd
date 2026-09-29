@@ -1,11 +1,31 @@
-// eslint-disable-next-line unicorn/prefer-node-protocol
-import fs from "fs";
+import fs from "node:fs";
 import { getDocument } from "../api/data/document";
 import renderTUI from "../tui/index";
 import { LAYOUT_KEY } from "../tui/layouts/keys";
 import { useBoundStore } from "../tui/store/index";
 import { attempt } from "../utilities";
 import { applyFlags, loadUserConfig } from "../user-config";
+import { SEARCH_MIN_CHAR } from "../settings";
+
+// CLI modes need a mirror before they start (the interactive app shows its own error screen).
+const connect = async (): Promise<boolean> => {
+  await useBoundStore.getState().fetchConfig();
+  const { mirrorAdapter, errorMessage } = useBoundStore.getState();
+  if (!mirrorAdapter) {
+    console.error(errorMessage ?? "Couldn't reach a mirror");
+    process.exitCode = 1;
+  }
+  return Boolean(mirrorAdapter);
+};
+
+const downloadInCLI = (md5List: string[]) => {
+  renderTUI({
+    startInCLIMode: true,
+    doNotFetchConfigInitially: true,
+    initialLayout: LAYOUT_KEY.BULK_DOWNLOAD_LAYOUT,
+  });
+  useBoundStore.getState().startBulkDownloadInCLI(md5List);
+};
 
 export const operate = async (flags: Record<string, unknown>) => {
   const { config, warnings } = loadUserConfig();
@@ -22,13 +42,16 @@ export const operate = async (flags: Record<string, unknown>) => {
 
   if (flags.search) {
     const query = flags.search as string;
-    if (query.length < 3) {
-      console.log("Query must be at least 3 characters long");
+    if (query.length < SEARCH_MIN_CHAR) {
+      console.error(`Query must be at least ${SEARCH_MIN_CHAR} characters long`);
+      process.exitCode = 1;
+      return;
+    }
+    if (!(await connect())) {
       return;
     }
 
     const store = useBoundStore.getState();
-    await store.fetchConfig();
     store.setSearchValue(query);
     renderTUI({
       startInCLIMode: false,
@@ -39,17 +62,29 @@ export const operate = async (flags: Record<string, unknown>) => {
   }
 
   if (flags.bulk) {
-    const filePath = flags.bulk as string;
-    const data = await fs.promises.readFile(filePath, "utf8");
-    const md5List = data.split("\n").filter((line) => line.trim());
-    const store = useBoundStore.getState();
-    await store.fetchConfig();
-    renderTUI({
-      startInCLIMode: true,
-      doNotFetchConfigInitially: true,
-      initialLayout: LAYOUT_KEY.BULK_DOWNLOAD_LAYOUT,
-    });
-    store.startBulkDownloadInCLI(md5List);
+    let data: string;
+    try {
+      data = await fs.promises.readFile(flags.bulk as string, "utf8");
+    } catch {
+      console.error(`Couldn't read ${flags.bulk as string}`);
+      process.exitCode = 1;
+      return;
+    }
+    // trim: lists saved on Windows end lines with \r
+    const md5List = data
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (await connect()) {
+      downloadInCLI(md5List);
+    }
+    return;
+  }
+
+  if (flags.download) {
+    if (await connect()) {
+      downloadInCLI([flags.download as string]);
+    }
     return;
   }
 
@@ -57,47 +92,23 @@ export const operate = async (flags: Record<string, unknown>) => {
     const md5 = flags.url as string;
 
     console.log("Fetching config...");
-    await useBoundStore.getState().fetchConfig();
+    if (!(await connect())) {
+      return;
+    }
     const store = useBoundStore.getState();
 
     console.log("Finding download url...");
-    const detailPageUrl = store.mirrorAdapter?.getDetailPageURL(md5);
-    if (!detailPageUrl) {
-      console.log("Failed to get detail page URL");
-      return;
-    }
-
-    const detailPageResult = await attempt((signal) => getDocument(detailPageUrl, signal));
-    if (!detailPageResult) {
-      console.log("Failed to get detail page document");
-      return;
-    }
-
-    const downloadUrl = store.mirrorAdapter?.getMainDownloadURLFromDocument(
-      detailPageResult
-    );
+    const detailPageUrl = store.mirrorAdapter?.getDetailPageURL(md5) ?? "";
+    const detailPage = await attempt((signal) => getDocument(detailPageUrl, signal));
+    const downloadUrl = detailPage && store.mirrorAdapter?.getMainDownloadURLFromDocument(detailPage);
     if (!downloadUrl) {
-      console.log("Failed to find download url");
+      console.error(`Couldn't find a download link for ${md5}`);
+      process.exitCode = 1;
       return;
     }
 
     console.log("Here is the direct download link:");
     console.log(downloadUrl);
-
-    return;
-  }
-
-  if (flags.download) {
-    const md5 = flags.download as string;
-    const md5List = [md5];
-    const store = useBoundStore.getState();
-    await store.fetchConfig();
-    renderTUI({
-      startInCLIMode: true,
-      doNotFetchConfigInitially: true,
-      initialLayout: LAYOUT_KEY.BULK_DOWNLOAD_LAYOUT,
-    });
-    store.startBulkDownloadInCLI(md5List);
     return;
   }
 

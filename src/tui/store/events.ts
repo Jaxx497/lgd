@@ -1,4 +1,4 @@
-import { TCombinedStore } from "./index";
+import type { GetState, SetState } from "./index";
 import { LAYOUT_KEY } from "../layouts/keys";
 import Label from "../../labels";
 import { Entry } from "../../api/models/entry";
@@ -33,15 +33,10 @@ export interface IEventActions {
   prevPage: () => Promise<void>;
   applyFilter: (filter: string[]) => void;
   requestQuit: () => void;
-  handleExit: () => void;
+  handleExit: (exitCode?: number) => void;
 }
 
-export const createEventActionsSlice = (
-  _set: (
-    partial: Partial<TCombinedStore> | ((state: TCombinedStore) => Partial<TCombinedStore>)
-  ) => void,
-  get: () => TCombinedStore
-) => ({
+export const createEventActionsSlice = (_set: SetState, get: GetState) => ({
   // New search screen with the previous query pre-filled.
   backToSearch: () => {
     const store = get();
@@ -262,9 +257,9 @@ export const createEventActionsSlice = (
     }
     store.setQuitPromptVisible(true);
   },
-  handleExit: () => {
+  handleExit: (exitCode = 0) => {
     removePartialDownloads();
     // eslint-disable-next-line unicorn/no-process-exit
-    process.exit(0);
+    process.exit(exitCode);
   },
 });

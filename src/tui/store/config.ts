@@ -1,4 +1,4 @@
-import { TCombinedStore } from "./index";
+import type { GetState, SetState } from "./index";
 import { Config, fetchConfig, findMirror, Mirror } from "../../api/data/config";
 import Label from "../../labels";
 import { attempt } from "../../utilities";
@@ -32,12 +32,7 @@ export const initialConfigState: Omit<
   filter: [],
 };
 
-export const createConfigStateSlice = (
-  set: (
-    partial: Partial<TCombinedStore> | ((state: TCombinedStore) => Partial<TCombinedStore>)
-  ) => void,
-  get: () => TCombinedStore
-) => ({
+export const createConfigStateSlice = (set: SetState, get: GetState) => ({
   ...initialConfigState,
 
   setUserConfig: (userConfig: UserConfig) => set({ userConfig, filter: userConfig.extensions }),
