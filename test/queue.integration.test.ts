@@ -131,7 +131,7 @@ describe("download queue integration", () => {
     const state = useBoundStore.getState();
     expect(state.downloadQueue).toEqual([entry]);
     expect(state.inDownloadQueueEntryIds).toEqual([entry.id]);
-    expect(state.totalAddedToDownloadQueue).toBe(1);
+    expect(state.downloads).toEqual([entry]);
     expect(state.downloadProgressMap[entry.id]?.status).toBe(DownloadStatus.IN_QUEUE);
     expect(iterateQueue).toHaveBeenCalledTimes(1);
   });
@@ -167,8 +167,6 @@ describe("download queue integration", () => {
       total: 18,
       status: DownloadStatus.DOWNLOADED,
     });
-    expect(state.totalDownloaded).toBe(1);
-    expect(state.totalFailed).toBe(0);
     expect(state.inDownloadQueueEntryIds).toEqual([]);
     expect(state.isQueueActive).toBe(false);
   });
@@ -206,7 +204,36 @@ describe("quit guard", () => {
     const state = useBoundStore.getState();
     expect(state.inDownloadQueueEntryIds).toEqual([]);
     expect(state.downloadProgressMap[entry.id]?.status).toBe(DownloadStatus.FAILED);
-    expect(state.totalFailed).toBe(1);
+  });
+});
+
+describe("downloads panel actions", () => {
+  it("removes a queued download but not the active one", () => {
+    const active = createEntry("active", "success");
+    const queued = createEntry("queued", "success");
+    useBoundStore.setState({
+      downloadQueue: [queued],
+      inDownloadQueueEntryIds: [active.id, queued.id],
+      downloads: [active, queued],
+    });
+
+    useBoundStore.getState().removeQueuedDownload(active.id);
+    useBoundStore.getState().removeQueuedDownload(queued.id);
+
+    const state = useBoundStore.getState();
+    expect(state.downloads).toEqual([active]);
+    expect(state.downloadQueue).toEqual([]);
+    expect(state.inDownloadQueueEntryIds).toEqual([active.id]);
+  });
+
+  it("clears finished downloads and keeps the ones still running", () => {
+    const active = createEntry("active", "success");
+    const finished = createEntry("finished", "success");
+    useBoundStore.setState({ inDownloadQueueEntryIds: [active.id], downloads: [finished, active] });
+
+    useBoundStore.getState().clearFinishedDownloads();
+
+    expect(useBoundStore.getState().downloads).toEqual([active]);
   });
 });
 

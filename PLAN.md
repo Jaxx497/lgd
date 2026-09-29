@@ -14,7 +14,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 | S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | done |
 | S5 | User config file | none (S4 uses its `columns`) | done |
 | S6 | Filetype filter + drop bad results | S4, S5 | done |
-| S7 | Downloads panel (`t`) | S4 | todo |
+| S7 | Downloads panel (`t`) | S4 | done |
 | S8 | Core logic review and refactor | S1–S7 | todo |
 
 Your original six goals map to: (1) filetype filter → S6, (2) more screen → S4, (3) back-navigation → S4, (4) formatting/columns → S4 + S5, (5) navigation → S4, (6) dependencies → S0 + S2.
@@ -193,6 +193,7 @@ Template:
 - Row text: `⬇ 43%  <title>  1.1 / 2.1 MB`, `⧗ queued`, `✓ → <path>` (final name from S1), `✗ failed`.
 - Generalises `download-indicator.tsx`.
 - Files: `src/tui/components/download-indicator.tsx` (→ panel), `src/tui/store/download-queue.ts`, `src/tui/app.tsx`, `test/queue.integration.test.ts`.
+- **Done.** `src/tui/components/downloads-panel.tsx`. The store keeps `downloads` (session list) instead of the three counters; counts are derived from statuses. `t` also works from the Info view. The panel only appears once something was downloaded. Found while testing: long `→ filename` cells wrapped and pushed the screen past the terminal height (Ink then redraws badly), so the column is fixed-width; filenames from the mirror are trimmed, including a space left before the extension by the 128-char cut.
 
 ### S8. Core logic review and refactor
 Purpose: the code was written by someone else; check the core logic for bugs, waste and needless complexity. Runs last because S1–S7 rewrite the UI, store wiring and download path, so reviewing them earlier would be wasted. Behaviour-preserving except for bug fixes, each fix with a test.

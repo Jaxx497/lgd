@@ -54,9 +54,9 @@ export const downloadFile = async ({
 
   const parsedContentDisposition = contentDisposition.parse(downloadContentDisposition);
   // basename: the name comes from the mirror, never let it escape `directory`
-  const fullFileName = path.basename(parsedContentDisposition.parameters.filename);
+  const fullFileName = path.basename(parsedContentDisposition.parameters.filename).trim();
   const { name, ext } = path.parse(fullFileName);
-  const slicedFileName = name.slice(0, MAX_FILE_NAME_LENGTH - ext.length) + ext;
+  const slicedFileName = name.slice(0, MAX_FILE_NAME_LENGTH - ext.length).trimEnd() + ext;
 
   const total = Number(downloadStream.headers.get("content-length") || 0);
 

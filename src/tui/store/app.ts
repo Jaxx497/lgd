@@ -19,6 +19,7 @@ export interface IAppState {
   isLoading: boolean;
   quitPromptVisible: boolean;
   isEditingFilter: boolean;
+  downloadsPanelOpen: boolean;
 
   loaderMessage: string;
   searchValue: string;
@@ -42,6 +43,7 @@ export interface IAppState {
   setIsLoading: (isLoading: boolean) => void;
   setQuitPromptVisible: (quitPromptVisible: boolean) => void;
   setIsEditingFilter: (isEditingFilter: boolean) => void;
+  setDownloadsPanelOpen: (downloadsPanelOpen: boolean) => void;
 
   setLoaderMessage: (loaderMessage: string) => void;
   setSearchValue: (searchValue: string) => void;
@@ -66,6 +68,7 @@ export const initialAppState = {
   isLoading: false,
   quitPromptVisible: false,
   isEditingFilter: false,
+  downloadsPanelOpen: false,
 
   loaderMessage: "",
   searchValue: "",
@@ -99,6 +102,7 @@ export const createAppStateSlice = (
   setIsLoading: (isLoading: boolean) => set({ isLoading }),
   setQuitPromptVisible: (quitPromptVisible: boolean) => set({ quitPromptVisible }),
   setIsEditingFilter: (isEditingFilter: boolean) => set({ isEditingFilter }),
+  setDownloadsPanelOpen: (downloadsPanelOpen: boolean) => set({ downloadsPanelOpen }),
 
   setLoaderMessage: (loaderMessage: string) => set({ loaderMessage }),
   setSearchValue: (searchValue: string) => set({ searchValue }),

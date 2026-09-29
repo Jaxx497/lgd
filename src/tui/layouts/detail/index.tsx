@@ -14,6 +14,7 @@ const Detail: FC = () => {
   const setActiveLayout = useBoundStore((state) => state.setActiveLayout);
   const pushDownloadQueue = useBoundStore((state) => state.pushDownloadQueue);
   const quitPromptVisible = useBoundStore((state) => state.quitPromptVisible);
+  const downloadsPanelOpen = useBoundStore((state) => state.downloadsPanelOpen);
   const downloadProgressMap = useBoundStore((state) => state.downloadProgressMap);
 
   useInput(
@@ -27,7 +28,7 @@ const Detail: FC = () => {
         pushDownloadQueue(detailedEntry);
       }
     },
-    { isActive: !quitPromptVisible }
+    { isActive: !quitPromptVisible && !downloadsPanelOpen }
   );
 
   if (!detailedEntry) {
@@ -59,7 +60,7 @@ const Detail: FC = () => {
           </Text>
         )}
       </ContentContainer>
-      <KeyHints hints="⏎/d download · h/←/esc back · q quit" />
+      <KeyHints hints="⏎/d download · h/←/esc back · t downloads · q quit" />
     </Box>
   );
 };

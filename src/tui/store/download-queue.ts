@@ -17,9 +17,8 @@ export interface IDownloadQueueState {
   downloadQueue: Entry[];
   inDownloadQueueEntryIds: string[];
   downloadProgressMap: Record<string, IDownloadProgress>;
-  totalAddedToDownloadQueue: number;
-  totalDownloaded: number;
-  totalFailed: number;
+  // every Entry downloaded this session, in the order shown in the Downloads panel
+  downloads: Entry[];
   isQueueActive: boolean;
 
   pushDownloadQueue: (entry: Entry) => void;
@@ -30,18 +29,15 @@ export interface IDownloadQueueState {
     entryId: string,
     downloadProgress: Partial<IDownloadProgress>
   ) => void;
-  increaseTotalAddedToDownloadQueue: () => void;
-  increaseTotalDownloaded: () => void;
-  increaseTotalFailed: () => void;
+  removeQueuedDownload: (entryId: string) => void;
+  clearFinishedDownloads: () => void;
 }
 
 export const initialDownloadQueueState = {
   downloadQueue: [],
   inDownloadQueueEntryIds: [],
   downloadProgressMap: {},
-  totalAddedToDownloadQueue: 0,
-  totalDownloaded: 0,
-  totalFailed: 0,
+  downloads: [],
   isQueueActive: false,
 };
 
@@ -63,6 +59,7 @@ export const createDownloadQueueStateSlice = (
     set({
       downloadQueue: [...store.downloadQueue, entry],
       inDownloadQueueEntryIds: [...store.inDownloadQueueEntryIds, entry.id],
+      downloads: [...store.downloads.filter((download) => download.id !== entry.id), entry],
     });
 
     store.updateCurrentDownloadProgress(entry.id, {
@@ -71,8 +68,6 @@ export const createDownloadQueueStateSlice = (
       total: 0,
       status: DownloadStatus.IN_QUEUE,
     });
-
-    store.increaseTotalAddedToDownloadQueue();
 
     if (store.isQueueActive) {
       return;
@@ -165,13 +160,11 @@ export const createDownloadQueueStateSlice = (
           },
         });
 
-        store.increaseTotalDownloaded();
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.DOWNLOADED,
         });
       } catch (error) {
         store.setWarningMessage((error as Error).message);
-        store.increaseTotalFailed();
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.FAILED,
         });
@@ -210,21 +203,28 @@ export const createDownloadQueueStateSlice = (
     }));
   },
 
-  increaseTotalAddedToDownloadQueue: () => {
-    set((previous) => ({
-      totalAddedToDownloadQueue: previous.totalAddedToDownloadQueue + 1,
-    }));
+  // Only waiting downloads can be removed; the active one has no abort hook.
+  removeQueuedDownload: (entryId: string) => {
+    const store = get();
+    if (!store.downloadQueue.some((entry) => entry.id === entryId)) {
+      return;
+    }
+
+    const downloadProgressMap = { ...store.downloadProgressMap };
+    delete downloadProgressMap[entryId];
+    set({
+      downloadQueue: store.downloadQueue.filter((entry) => entry.id !== entryId),
+      inDownloadQueueEntryIds: store.inDownloadQueueEntryIds.filter((id) => id !== entryId),
+      downloads: store.downloads.filter((entry) => entry.id !== entryId),
+      downloadProgressMap,
+    });
   },
 
-  increaseTotalDownloaded: () => {
-    set((previous) => ({
-      totalDownloaded: previous.totalDownloaded + 1,
-    }));
-  },
-
-  increaseTotalFailed: () => {
-    set((previous) => ({
-      totalFailed: previous.totalFailed + 1,
-    }));
+  // Drops finished and failed downloads from the panel; the results table keeps its ✓ / ✗.
+  clearFinishedDownloads: () => {
+    const store = get();
+    set({
+      downloads: store.downloads.filter((entry) => store.inDownloadQueueEntryIds.includes(entry.id)),
+    });
   },
 });

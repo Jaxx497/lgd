@@ -10,6 +10,7 @@ import { ResultListLoadingSkeleton } from "./result-list-loading-skeleton";
 import { ResultRow } from "./result-row";
 import { Help } from "./help";
 import { FilterPrompt } from "./filter-prompt";
+import { DOWNLOADS_PANEL_EXTRA_ROWS } from "../../components/downloads-panel";
 
 // Lines outside the table: header, table border (2), key hints, and up to 3 status lines
 // (downloads, warning, quit prompt), plus one spare so Ink never fills the whole screen.
@@ -18,7 +19,7 @@ const RESERVED_ROWS = 8;
 const RESERVED_COLUMNS = 8;
 
 const HINTS =
-  "j/k move · <n>⏎ jump · ⏎/d download · i info · ]/[ page · f filter · / search · ? help · q quit";
+  "j/k move · <n>⏎ jump · ⏎/d download · i info · ]/[ page · f filter · t downloads · / search · ? help · q quit";
 
 const ResultList: FC = () => {
   const entries = useBoundStore((state) => state.entries);
@@ -32,6 +33,7 @@ const ResultList: FC = () => {
   const nextPage = useBoundStore((state) => state.nextPage);
   const previousPage = useBoundStore((state) => state.prevPage);
   const isEditingFilter = useBoundStore((state) => state.isEditingFilter);
+  const downloadsPanelOpen = useBoundStore((state) => state.downloadsPanelOpen);
   const setIsEditingFilter = useBoundStore((state) => state.setIsEditingFilter);
   const backToSearch = useBoundStore((state) => state.backToSearch);
   const setDetailedEntry = useBoundStore((state) => state.setDetailedEntry);
@@ -43,7 +45,11 @@ const ResultList: FC = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [previousTop, setPreviousTop] = useState(0);
 
-  const height = Math.max(3, rows - RESERVED_ROWS);
+  let panelRows = 0;
+  if (downloadsPanelOpen) {
+    panelRows = DOWNLOADS_PANEL_EXTRA_ROWS;
+  }
+  const height = Math.max(3, rows - RESERVED_ROWS - panelRows);
   // Scroll only as far as needed to keep the cursor visible (state from the previous render).
   const top = scrollTopFor(previousTop, cursor, height, entries.length);
   if (top !== previousTop) {
@@ -114,7 +120,7 @@ const ResultList: FC = () => {
         setShowHelp(true);
       }
     },
-    { isActive: !isLoading && !quitPromptVisible && !isEditingFilter }
+    { isActive: !isLoading && !quitPromptVisible && !isEditingFilter && !downloadsPanelOpen }
   );
 
   if (isLoading) {

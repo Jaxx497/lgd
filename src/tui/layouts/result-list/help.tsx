@@ -10,6 +10,7 @@ const KEYS: [string, string][] = [
   ["i l →", "info"],
   ["] n  [ p", "next / previous page (] also looks further on a short page)"],
   ["f", "filter by filetype (pdf,epub; empty for all)"],
+  ["t", "downloads panel (j/k, x remove queued, r retry failed, c clear)"],
   ["/ esc", "new search"],
   ["q ctrl-c", "quit"],
 ];
