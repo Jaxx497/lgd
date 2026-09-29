@@ -1,9 +1,9 @@
 import { TCombinedStore } from "./index";
 import { Entry } from "../../api/models/entry";
-import { ListItem } from "../../api/models/list-item";
-import { constructListItems, NextPageStatus } from "../../utilities";
 import { LAYOUT_KEY } from "../layouts/keys";
 import { clearScreen } from "../helpers/screen";
+
+export type NextPageStatus = "idle" | "checking" | "ready" | "unavailable" | "error";
 
 export type MirrorCheckStatus = "pending" | "checking" | "ok" | "failed";
 
@@ -17,8 +17,6 @@ export interface IAppState {
 
   isLoading: boolean;
   quitPromptVisible: boolean;
-  anyEntryExpanded: boolean;
-  showSearchMinCharWarning: boolean;
 
   loaderMessage: string;
   searchValue: string;
@@ -27,12 +25,10 @@ export interface IAppState {
   warningTimeout: NodeJS.Timeout | undefined;
 
   currentPage: number;
-  activeExpandedListLength: number;
-  listItemsCursor: number;
+  cursor: number;
 
   detailedEntry: Entry | undefined;
   entries: Entry[];
-  listItems: ListItem[];
   activeLayout: LAYOUT_KEY;
 
   nextPageStatus: NextPageStatus;
@@ -43,7 +39,6 @@ export interface IAppState {
 
   setIsLoading: (isLoading: boolean) => void;
   setQuitPromptVisible: (quitPromptVisible: boolean) => void;
-  setAnyEntryExpanded: (anyEntryExpanded: boolean) => void;
 
   setLoaderMessage: (loaderMessage: string) => void;
   setSearchValue: (searchValue: string) => void;
@@ -51,8 +46,7 @@ export interface IAppState {
   setWarningMessage: (warningMessage: string | undefined) => void;
 
   setCurrentPage: (currentPage: number) => void;
-  setActiveExpandedListLength: (activeExpandedListLength: number) => void;
-  setListItemsCursor: (listItemsCursor: number) => void;
+  setCursor: (cursor: number) => void;
 
   setDetailedEntry: (detailedEntry: Entry | undefined) => void;
   setEntries: (entries: Entry[]) => void;
@@ -68,8 +62,6 @@ export interface IAppState {
 export const initialAppState = {
   isLoading: false,
   quitPromptVisible: false,
-  anyEntryExpanded: false,
-  showSearchMinCharWarning: true,
 
   loaderMessage: "",
   searchValue: "",
@@ -78,12 +70,10 @@ export const initialAppState = {
   warningTimeout: undefined,
 
   currentPage: 1,
-  activeExpandedListLength: 0,
-  listItemsCursor: 0,
+  cursor: 0,
 
   detailedEntry: undefined,
-  entries: [],
-  listItems: [],
+  entries: [] as Entry[],
   activeLayout: LAYOUT_KEY.SEARCH_LAYOUT,
 
   nextPageStatus: "idle" as NextPageStatus,
@@ -104,13 +94,9 @@ export const createAppStateSlice = (
 
   setIsLoading: (isLoading: boolean) => set({ isLoading }),
   setQuitPromptVisible: (quitPromptVisible: boolean) => set({ quitPromptVisible }),
-  setAnyEntryExpanded: (anyEntryExpanded: boolean) => set({ anyEntryExpanded }),
 
   setLoaderMessage: (loaderMessage: string) => set({ loaderMessage }),
-  setSearchValue: (searchValue: string) => {
-    set(() => ({ showSearchMinCharWarning: searchValue.length < 3 }));
-    set({ searchValue });
-  },
+  setSearchValue: (searchValue: string) => set({ searchValue }),
   setErrorMessage: (errorMessage: string | undefined) => set({ errorMessage }),
   setWarningMessage: (warningMessage: string | undefined) => {
     const WARNING_DURATION = 5000;
@@ -128,27 +114,10 @@ export const createAppStateSlice = (
   },
 
   setCurrentPage: (currentPage: number) => set({ currentPage }),
-  setActiveExpandedListLength: (activeExpandedListLength: number) =>
-    set({ activeExpandedListLength }),
-  setListItemsCursor: (listItemsCursor: number) => set({ listItemsCursor }),
+  setCursor: (cursor: number) => set({ cursor }),
 
   setDetailedEntry: (detailedEntry: Entry | undefined) => set({ detailedEntry }),
-  setEntries: (entries: Entry[]) => {
-    const store = get();
-    const listItems = constructListItems({
-      entries,
-      currentPage: store.currentPage,
-      nextPageStatus: store.nextPageStatus,
-      handleSearchOption: store.backToSearch,
-      handleNextPageOption: store.nextPage,
-      handleRetryNextPageOption: () => {
-        store.checkNextPage(store.searchValue, store.currentPage + 1);
-      },
-      handlePrevPageOption: store.prevPage,
-      handleExitOption: store.requestQuit,
-    });
-    set({ entries, listItems });
-  },
+  setEntries: (entries: Entry[]) => set({ entries }),
   setActiveLayout: (activeLayout: LAYOUT_KEY) => {
     const store = get();
     if (!store.CLIMode) {

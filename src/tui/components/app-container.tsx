@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Box } from "ink";
-import { SCREEN_BASE_APP_WIDTH, SCREEN_PADDING, SCREEN_WIDTH_PERC } from "../../settings";
 import { useStdoutDimensions } from "../hooks/use-stdout-dimensions";
 
 interface Properties {
@@ -8,15 +7,10 @@ interface Properties {
 }
 
 export function AppContainer({ children }: Properties) {
-  const [cols] = useStdoutDimensions();
-
-  let width: number | string = `${SCREEN_WIDTH_PERC}%`;
-  if (cols - SCREEN_PADDING > SCREEN_BASE_APP_WIDTH) {
-    width = SCREEN_BASE_APP_WIDTH;
-  }
+  const [columns] = useStdoutDimensions();
 
   return (
-    <Box width={width} marginLeft={1} paddingRight={4} flexDirection="column">
+    <Box width={columns - 2} marginLeft={1} flexDirection="column">
       {children}
     </Box>
   );

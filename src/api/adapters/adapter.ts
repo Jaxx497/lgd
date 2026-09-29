@@ -3,7 +3,6 @@ import { Entry } from "../models/entry";
 export abstract class Adapter {
   abstract baseURL: string;
 
-  abstract isHiddenField(fieldName: string): boolean;
   abstract parseEntries(
     document: Document,
     throwError?: (message: string) => void
@@ -15,6 +14,5 @@ export abstract class Adapter {
     document: Document,
     throwError?: (message: string) => void
   ): string | undefined;
-  abstract formatField(fieldName: string, value: string): string;
   abstract detectConnectionError(document: Document): string | undefined;
 }

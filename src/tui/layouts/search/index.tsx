@@ -1,9 +1,10 @@
 import type { FC } from "react";
 import { Box } from "ink";
 
-import SearchInputMain from "./search-input/index";
+import SearchInput from "./search-input/search-input";
 import { useBoundStore } from "../../store";
 import { LoadingSpinner } from "../../components/loading-spinner";
+import { KeyHints } from "../../components/key-hints";
 
 const Search: FC = () => {
   const isLoading = useBoundStore((state) => state.isLoading);
@@ -15,7 +16,8 @@ const Search: FC = () => {
 
   return (
     <Box flexDirection="column">
-      <SearchInputMain />
+      <SearchInput />
+      <KeyHints hints="⏎ search · ctrl-c quit" />
     </Box>
   );
 };

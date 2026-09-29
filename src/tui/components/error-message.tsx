@@ -1,44 +1,34 @@
-import { Box, Text } from "ink";
-import OptionList from "./option-list";
+import { Box, Text, useInput } from "ink";
 import { useBoundStore } from "../store";
-import Label from "../../labels";
-import { ErrorMessageOption } from "../../options";
+import { SEARCH_MIN_CHAR } from "../../settings";
+import { KeyHints } from "./key-hints";
 
 export function ErrorMessage() {
   const errorMessage = useBoundStore((state) => state.errorMessage);
-  const requestQuit = useBoundStore((state) => state.requestQuit);
   const setErrorMessage = useBoundStore((state) => state.setErrorMessage);
   const handleSearchSubmit = useBoundStore((state) => state.handleSearchSubmit);
   const searchValue = useBoundStore((state) => state.searchValue);
 
-  const canRetry = searchValue.length >= 3;
+  const canRetry = searchValue.length >= SEARCH_MIN_CHAR;
+
+  useInput((input) => {
+    if (input === "r" && canRetry) {
+      setErrorMessage(undefined);
+      handleSearchSubmit();
+    }
+  });
+
+  let hints = "q quit";
+  if (canRetry) {
+    hints = "r retry · q quit";
+  }
 
   return (
     <Box flexDirection="column">
-      <Box>
-        <Text>
-          Something went wrong:
-          <Text> {errorMessage}</Text>
-        </Text>
-      </Box>
-
-      <OptionList
-        options={{
-          ...(canRetry && {
-            [ErrorMessageOption.RETRY]: {
-              label: Label.RETRY,
-              onSelect: () => {
-                setErrorMessage(undefined);
-                handleSearchSubmit();
-              },
-            },
-          }),
-          [ErrorMessageOption.EXIT]: {
-            label: Label.EXIT,
-            onSelect: requestQuit,
-          },
-        }}
-      />
+      <Text>
+        Something went wrong: <Text color="red">{errorMessage}</Text>
+      </Text>
+      <KeyHints hints={hints} />
     </Box>
   );
 }

@@ -3,7 +3,6 @@ import { Layout } from "./layout";
 import { LAYOUT_KEY } from "./keys";
 import Search from "./search/index";
 import ResultList from "./result-list/index";
-import { ResultListContextProvider } from "../contexts/result-list-context";
 import Detail from "./detail/index";
 import { BulkDownload } from "./bulk-download";
 
@@ -15,9 +14,7 @@ const Layouts: FC = () => {
       </Layout>
 
       <Layout layoutName={LAYOUT_KEY.RESULT_LIST_LAYOUT}>
-        <ResultListContextProvider>
-          <ResultList />
-        </ResultListContextProvider>
+        <ResultList />
       </Layout>
 
       <Layout layoutName={LAYOUT_KEY.DETAIL_LAYOUT}>

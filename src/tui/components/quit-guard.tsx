@@ -6,6 +6,8 @@ import { LAYOUT_KEY } from "../layouts/keys";
 export function QuitGuard() {
   const CLIMode = useBoundStore((state) => state.CLIMode);
   const activeLayout = useBoundStore((state) => state.activeLayout);
+  const isLoading = useBoundStore((state) => state.isLoading);
+  const errorMessage = useBoundStore((state) => state.errorMessage);
   const quitPromptVisible = useBoundStore((state) => state.quitPromptVisible);
   const setQuitPromptVisible = useBoundStore((state) => state.setQuitPromptVisible);
   const requestQuit = useBoundStore((state) => state.requestQuit);
@@ -14,7 +16,8 @@ export function QuitGuard() {
   const queuedCount = useBoundStore((state) => state.downloadQueue.length);
 
   // `q` must stay typeable in text inputs
-  const textInputFocused = activeLayout === LAYOUT_KEY.SEARCH_LAYOUT;
+  const textInputFocused =
+    activeLayout === LAYOUT_KEY.SEARCH_LAYOUT && !isLoading && !errorMessage;
 
   useInput((input, key) => {
     const isCtrlC = key.ctrl && input === "c";

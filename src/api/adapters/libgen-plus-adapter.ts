@@ -10,10 +10,6 @@ export class LibgenPlusAdapter implements Adapter {
     this.baseURL = baseURL;
   }
 
-  isHiddenField(fieldName: string): boolean {
-    return !["id"].includes(fieldName);
-  }
-
   parseEntries(document: Document, throwError?: (message: string) => void): Entry[] | undefined {
     const entries: Entry[] = [];
     const containerTable = document.querySelector<HTMLTableElement>("#tablelibgen > tbody");
@@ -109,36 +105,5 @@ export class LibgenPlusAdapter implements Adapter {
       return alertElement.textContent?.trim() || "Unknown connection error";
     }
     return undefined;
-  }
-
-  formatField(fieldName: string, value: string): string {
-    switch (fieldName) {
-      case "authors": {
-        return value
-          .split(", ")
-          .map((author) => author.trim())
-          .join(", ");
-      }
-      case "title": {
-        return value.trim();
-      }
-      case "publisher":
-      case "year":
-      case "pages":
-      case "language":
-      case "size":
-      case "extension": {
-        return value.trim();
-      }
-      case "mirror": {
-        if (value.startsWith("http")) {
-          return value;
-        }
-        return this.getPageURL(value);
-      }
-      default: {
-        return value;
-      }
-    }
   }
 }

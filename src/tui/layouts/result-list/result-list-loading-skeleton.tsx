@@ -1,11 +1,10 @@
 import { Box, Text } from "ink";
 import InkSpinner from "ink-spinner";
 import Label from "../../../labels";
-import { RESULT_LIST_LENGTH } from "../../../constants";
 import { useBoundStore } from "../../store/index";
 import MirrorFailover from "../../components/mirror-failover";
 
-export function ResultListLoadingSkeleton() {
+export function ResultListLoadingSkeleton({ height }: { height: number }) {
   const connectionError = useBoundStore((state) => state.connectionError);
 
   return (
@@ -13,7 +12,7 @@ export function ResultListLoadingSkeleton() {
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      minHeight={RESULT_LIST_LENGTH + 2}
+      minHeight={height + 2}
       borderStyle="round"
       borderColor="grey"
       width="100%"

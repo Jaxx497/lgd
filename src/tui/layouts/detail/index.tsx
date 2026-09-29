@@ -1,56 +1,65 @@
 import type { FC } from "react";
-import { Box } from "ink";
+import { Box, Text, useInput } from "ink";
 import ContentContainer from "../../components/content-container";
+import { KeyHints } from "../../components/key-hints";
 import DetailRow from "./detail-row";
-import DetailEntryOptions from "./detail-entry-options";
-import UsageInfo from "../../components/usage-info";
 import { useBoundStore } from "../../store";
-import ResultListInfo from "../../components/result-list-info";
 import { DownloadStatusAndProgress } from "../../components/download-status-and-progress";
+import { LAYOUT_KEY } from "../keys";
 
 const Detail: FC = () => {
   const mirrorAdapter = useBoundStore((state) => state.mirrorAdapter);
   const detailedEntry = useBoundStore((state) => state.detailedEntry);
-
+  const setDetailedEntry = useBoundStore((state) => state.setDetailedEntry);
+  const setActiveLayout = useBoundStore((state) => state.setActiveLayout);
+  const pushDownloadQueue = useBoundStore((state) => state.pushDownloadQueue);
+  const quitPromptVisible = useBoundStore((state) => state.quitPromptVisible);
   const downloadProgressMap = useBoundStore((state) => state.downloadProgressMap);
-  let downloadProgressData;
-  if (detailedEntry) {
-    downloadProgressData = downloadProgressMap[detailedEntry.id];
-  }
+
+  useInput(
+    (input, key) => {
+      if (input === "h" || key.leftArrow || key.escape) {
+        setDetailedEntry(undefined);
+        setActiveLayout(LAYOUT_KEY.RESULT_LIST_LAYOUT);
+        return;
+      }
+      if (((input === "d" && !key.ctrl) || key.return) && detailedEntry) {
+        pushDownloadQueue(detailedEntry);
+      }
+    },
+    { isActive: !quitPromptVisible }
+  );
 
   if (!detailedEntry) {
     return;
   }
 
+  const downloadProgressData = downloadProgressMap[detailedEntry.id];
+  const fields: [string, string][] = [
+    ["Title", detailedEntry.title],
+    ["Authors", detailedEntry.authors],
+    ["Publisher", detailedEntry.publisher],
+    ["Year", detailedEntry.year],
+    ["Pages", detailedEntry.pages],
+    ["Language", detailedEntry.language],
+    ["Format", detailedEntry.extension],
+    ["Size", detailedEntry.size],
+    ["Mirror", mirrorAdapter?.getPageURL(detailedEntry.mirror) ?? detailedEntry.mirror],
+  ];
+
   return (
     <Box flexDirection="column">
-      <ResultListInfo />
       <ContentContainer>
-        {Object.entries(detailedEntry)
-          .filter(([key]) => mirrorAdapter?.isHiddenField(key))
-          .map(([key, value], index) => {
-            let label = `${key[0].toUpperCase()}${key.slice(1)}`;
-            if (key === "id") {
-              label = key.toUpperCase();
-            }
-
-            return (
-              <DetailRow
-                key={index}
-                label={label}
-                description={mirrorAdapter?.formatField(key, value) || value.toString()}
-              />
-            );
-          })}
-
+        {fields.map(([label, value]) => (
+          <DetailRow key={label} label={label} description={value} />
+        ))}
         {downloadProgressData && (
-          <Box paddingLeft={3}>
+          <Text>
             <DownloadStatusAndProgress downloadProgressData={downloadProgressData} />
-          </Box>
+          </Text>
         )}
-        <DetailEntryOptions />
       </ContentContainer>
-      <UsageInfo />
+      <KeyHints hints="⏎/d download · h/←/esc back · q quit" />
     </Box>
   );
 };

@@ -2,7 +2,7 @@ import { TCombinedStore } from "./index";
 import { LAYOUT_KEY } from "../layouts/keys";
 import Label from "../../labels";
 import { Entry } from "../../api/models/entry";
-import { SEARCH_PAGE_SIZE } from "../../settings";
+import { SEARCH_MIN_CHAR, SEARCH_PAGE_SIZE } from "../../settings";
 import { attempt } from "../../utilities";
 import { getDocument } from "../../api/data/document";
 import { removePartialDownloads } from "../../api/data/download";
@@ -29,10 +29,13 @@ export const createEventActionsSlice = (
   ) => void,
   get: () => TCombinedStore
 ) => ({
+  // New search screen with the previous query pre-filled.
   backToSearch: () => {
     const store = get();
+    const { searchValue } = store;
 
     store.resetAppState();
+    store.setSearchValue(searchValue);
     store.setActiveLayout(LAYOUT_KEY.SEARCH_LAYOUT);
   },
   search: async (query: string, pageNumber: number): Promise<SearchResult> => {
@@ -69,8 +72,6 @@ export const createEventActionsSlice = (
   checkNextPage: (query: string, pageNumber: number) => {
     const store = get();
     store.setNextPageStatus("checking");
-    // Rebuild listItems to show checking state
-    store.setEntries(store.entries);
 
     store.search(query, pageNumber).then((result) => {
       const currentStore = get();
@@ -83,14 +84,12 @@ export const createEventActionsSlice = (
       } else {
         currentStore.setNextPageStatus("error");
       }
-      // Rebuild listItems with updated nextPageStatus
-      currentStore.setEntries(currentStore.entries);
     });
   },
   handleSearchSubmit: async () => {
     const store = get();
 
-    if (store.searchValue.length < 3) {
+    if (store.searchValue.length < SEARCH_MIN_CHAR) {
       return;
     }
 
@@ -192,7 +191,7 @@ export const createEventActionsSlice = (
     }
 
     store.setCurrentPage(nextPageNumber);
-    store.setListItemsCursor(0);
+    store.setCursor(0);
     store.setNextPageStatus("idle");
     store.setEntries(entries);
     store.setIsLoading(false);
@@ -222,7 +221,7 @@ export const createEventActionsSlice = (
     store.setCurrentPage(store.currentPage - 1);
     store.setNextPageStatus("ready");
     store.setEntries(result.entries);
-    store.setListItemsCursor(0);
+    store.setCursor(0);
     store.setIsLoading(false);
   },
 

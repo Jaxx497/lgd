@@ -160,7 +160,7 @@ describe("search integration", () => {
     expect(lookupPageCache).toHaveBeenCalledWith(2);
     expect(state.currentPage).toBe(2);
     expect(state.entries).toEqual([entry]);
-    expect(state.listItemsCursor).toBe(0);
+    expect(state.cursor).toBe(0);
     expect(state.nextPageStatus).toBe("idle");
     expect(state.isLoading).toBe(false);
     expect(checkNextPage).toHaveBeenCalledWith("typescript", 3);

@@ -7,10 +7,8 @@ const DetailRow: FC<{
 }> = ({ label, description }) => {
   return (
     <Box>
-      <Box flexShrink={0}>
-        <Text color="yellow" bold={true}>
-          {label}:{" "}
-        </Text>
+      <Box flexShrink={0} width={11}>
+        <Text color="yellow">{label}</Text>
       </Box>
       <Text>{description}</Text>
     </Box>

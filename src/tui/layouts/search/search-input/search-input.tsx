@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import Input from "../../../components/input";
-import { SEARCH_MIN_CHAR } from "../../../../constants";
+import { SEARCH_MIN_CHAR } from "../../../../settings";
 import { useBoundStore } from "../../../store";
 
 const SearchInput: FC = () => {

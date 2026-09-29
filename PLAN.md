@@ -11,7 +11,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 | S1 | Never overwrite files (`name(1).ext`) | none | done |
 | S2 | Remove interactive bulk selection | none | done |
 | S3 | Quit guard (`q` / `Ctrl-c`) | none | done |
-| S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | todo |
+| S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | done |
 | S5 | User config file | none (S4 uses its `columns`) | todo |
 | S6 | Filetype filter + drop bad results | S4, S5 | todo |
 | S7 | Downloads panel (`t`) | S4 | todo |
@@ -125,6 +125,14 @@ Goal: one plain scrolling table, no option rows, no expansion, hotkeys for every
 **Also fix while here**: `src/tui/helpers/screen.ts` Windows clear-screen sequence is missing a backslash (`"u001b[H…"`).
 
 **Done when**: unit tests for row formatter (widths, truncation, right-alignment, column dropping) and for cursor/jump logic; manual check at 60, 100 and 200 columns and at a short terminal.
+
+**Done.** Notes from building it:
+- Cells are Ink `<Box width>` + `truncate-end`, so Ink handles wide (CJK) characters; the only pure logic is `layoutColumns` / `scrollTopFor` in `src/tui/helpers/table.ts` (tested). Columns drop at roughly 64 / 51 / 43 columns wide.
+- The number buffer has no timeout (vim-style): it clears on any non-digit key or `Esc`. A number before `j`/`k` moves that many rows.
+- The Info view no longer shows the random internal `id`. Adapter `isHiddenField` / `formatField` were only used for that and are removed.
+- The error screen uses keys (`r` retry, `q` quit). With that, `Option`/`OptionList`, both list-control hooks, `options.ts`, `constants.ts` (merged into `settings.ts`), the result-list context and the list-item model are gone.
+- Fixed from real data: years like "2011 April 1" show as `2011`; titles had runs of spaces from the HTML (whitespace now collapsed in `clearText`); the search screen showed the minimum-length hint twice.
+- Checked in a pseudo-terminal at 110×30 and 60×16.
 
 ### S5. User config file
 - Location: `~/.config/lgd/config.json` on every platform (`os.homedir()` + `.config/lgd/config.json`; on Windows that is `%USERPROFILE%\.config\lgd\config.json`). No XDG or `%APPDATA%` lookup.
