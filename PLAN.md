@@ -15,7 +15,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 | S5 | User config file | none (S4 uses its `columns`) | done |
 | S6 | Filetype filter + drop bad results | S4, S5 | done |
 | S7 | Downloads panel (`t`) | S4 | done |
-| S8 | Core logic review and refactor | S1–S7 | todo |
+| S8 | Core logic review and refactor | S1–S7 | done |
 
 Your original six goals map to: (1) filetype filter → S6, (2) more screen → S4, (3) back-navigation → S4, (4) formatting/columns → S4 + S5, (5) navigation → S4, (6) dependencies → S0 + S2.
 
@@ -215,6 +215,30 @@ Purpose: the code was written by someone else; check the core logic for bugs, wa
   - CLI `-b`/`-d`: the process exits before the final frame renders, so the screen ends on `DOWNLOADING 100%` / `COMPLETED (0)`.
   - Mirror failover/switching paths (`switchMirror`, `findMirror`) and `warningTimeout` in the store are worth a look for races.
 - **Done when:** each scope item has a written verdict (fixed / no change / deferred with reason), tests cover each fix, and typecheck, lint, tests and build pass.
+
+**Verdicts (done):**
+
+| Item | Verdict |
+|---|---|
+| `getDocument` / `fetchLibgen` ignored HTTP status | **Fixed (bug).** `fetchLibgen` throws on non-2xx, so an error page is retried instead of being cached as an empty last page, and the mirror check rejects a mirror answering 5xx. Tests added. |
+| `getDocument` discarded the original error; unused `htmlString` | **Fixed.** Error kept as `cause`; returns the document only. |
+| `downloadFile` partial files / swallowed errors | **Fixed in S1/S3** (partial file deleted on failure and on quit). The thrown message still omits the cause: no change, the UI only shows a one-line warning. |
+| `attempt`: `onFail`/`onError`/`onComplete` | **Removed** (no callers). Timeout covers the fetch only, not the streamed body: correct, there is a test for it. |
+| Random `nanoid` entry ids | **Fixed (bug).** Id is the file md5, so download state survives re-fetching at another chunk size (verified live); duplicates across chunks dropped. `nanoid` removed. |
+| `entryCacheMap` unbounded | **No change.** Session-only, at most 100 entries per URL; switching mirrors clears it. |
+| `setSearchValue` hardcoded `3` | **Fixed in S4.** |
+| `clearText` first-line cut | **No change**, it is deliberate (drops image-size/ISBN lines); dead tag-stripping regexes removed. |
+| Repeated slice `set`/`get` types | **Fixed.** `SetState`/`GetState` in `store/index.ts`. |
+| `Adapter` abstract class + `getAdapter` | **Removed.** One implementation; unknown mirror types in the remote list used to crash startup, now they are filtered out. |
+| Mirror switching / `warningTimeout` races | **Fixed one:** the download queue captured the mirror adapter when it started, so a mid-queue mirror switch was ignored. `checkNextPage` race gone with S6. `warningTimeout`: no issue. |
+| `updateCurrentDownloadProgress` "delta or reset" semantics | **Simplified** to a plain merge plus `addDownloadProgress`. |
+| CLI `-b`/`-d` exit before the final frame | **Fixed**, and they exit 1 if any download failed. |
+| CLI with no reachable mirror | **Fixed:** prints the real error, exits 1 (was a misleading message or a flash of the error screen). |
+| `-b` list file | **Fixed:** Windows line endings (`\r` broke the URL); missing file no longer crashes. |
+| `bin/index.js` | **Removed.** It required `build/src/index.js`, which the build never produces; `package.json` `bin` points at `build/index.js`. |
+| `LoadingSpinner` → `SpinnerText` → `Spinner` | **Collapsed** one layer. |
+
+Not done: running `/code-review` and `/simplify` as separate skill passes; the review above was done by reading each module in full instead.
 
 ## 4. Decisions log
 - App renamed `lgd`, version 1.0.0, original author credited (S0b). Config lives in `~/.config/lgd/`.

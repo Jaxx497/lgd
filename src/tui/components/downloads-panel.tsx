@@ -117,7 +117,10 @@ export function DownloadsPanel() {
     <Box flexDirection="column">
       <Text wrap="truncate-end">
         <Text color="cyanBright">▾ {summary}</Text>
-        <Text color="gray"> → {downloadDirectory} · j/k · x remove · r retry · c clear · t close</Text>
+        <Text color="gray">
+          {" "}
+          → {downloadDirectory} · j/k · x remove · r retry · c clear · t close
+        </Text>
       </Text>
       {downloads.slice(top, top + PANEL_ROWS).map((entry, index) => {
         const download = downloadProgressMap[entry.id];

@@ -3,11 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { Writable } from "node:stream";
-import {
-  downloadFile,
-  removePartialDownloads,
-  reserveUniquePath,
-} from "../src/api/data/download";
+import { downloadFile, removePartialDownloads, reserveUniquePath } from "../src/api/data/download";
 
 const createResponse = (filename: string, chunks: Uint8Array[]) => {
   const body = new ReadableStream<Uint8Array>({

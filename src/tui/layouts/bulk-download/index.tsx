@@ -41,7 +41,6 @@ export function BulkDownload() {
             {!item.filename && !item.md5 && <Text color="gray">-</Text>}
           </Text>
         ))}
-
       </Box>
     </Box>
   );

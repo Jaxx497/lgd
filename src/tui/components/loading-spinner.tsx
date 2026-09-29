@@ -1,5 +1,5 @@
-import { Text } from "ink";
-import SpinnerText from "./spinner-text";
+import { Box, Text } from "ink";
+import Spinner from "./spinner";
 
 interface Properties {
   message: string;
@@ -7,8 +7,11 @@ interface Properties {
 
 export function LoadingSpinner({ message }: Properties) {
   return (
-    <SpinnerText>
+    <Box>
+      <Box marginRight={1}>
+        <Spinner />
+      </Box>
       <Text>{message}</Text>
-    </SpinnerText>
+    </Box>
   );
 }

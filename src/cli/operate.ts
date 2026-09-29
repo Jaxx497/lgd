@@ -100,7 +100,8 @@ export const operate = async (flags: Record<string, unknown>) => {
     console.log("Finding download url...");
     const detailPageUrl = store.mirrorAdapter?.getDetailPageURL(md5) ?? "";
     const detailPage = await attempt((signal) => getDocument(detailPageUrl, signal));
-    const downloadUrl = detailPage && store.mirrorAdapter?.getMainDownloadURLFromDocument(detailPage);
+    const downloadUrl =
+      detailPage && store.mirrorAdapter?.getMainDownloadURLFromDocument(detailPage);
     if (!downloadUrl) {
       console.error(`Couldn't find a download link for ${md5}`);
       process.exitCode = 1;

@@ -2,12 +2,7 @@ import type { GetState, SetState } from "./index";
 import { LAYOUT_KEY } from "../layouts/keys";
 import Label from "../../labels";
 import { Entry } from "../../api/models/entry";
-import {
-  FETCH_CAP,
-  FILTERED_CHUNK_SIZE,
-  SEARCH_MIN_CHAR,
-  SEARCH_PAGE_SIZE,
-} from "../../settings";
+import { FETCH_CAP, FILTERED_CHUNK_SIZE, SEARCH_MIN_CHAR, SEARCH_PAGE_SIZE } from "../../settings";
 import { usableResults } from "../../api/filter";
 import type { NextPageStatus } from "./app";
 import { attempt } from "../../utilities";

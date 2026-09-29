@@ -1,10 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-  COLUMN_GAP,
-  DEFAULT_COLUMNS,
-  layoutColumns,
-  scrollTopFor,
-} from "../src/tui/helpers/table";
+import { COLUMN_GAP, DEFAULT_COLUMNS, layoutColumns, scrollTopFor } from "../src/tui/helpers/table";
 
 const names = (layout: ReturnType<typeof layoutColumns>) => layout.map((cell) => cell.column);
 const totalWidth = (layout: ReturnType<typeof layoutColumns>) =>

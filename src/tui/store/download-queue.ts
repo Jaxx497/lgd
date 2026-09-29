@@ -122,9 +122,7 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
           throw new Error(`Couldn't fetch the mirror page for "${entry.title}"`);
         }
 
-        const downloadUrl = get().mirrorAdapter?.getMainDownloadURLFromDocument(
-          mirrorPageResult
-        );
+        const downloadUrl = get().mirrorAdapter?.getMainDownloadURLFromDocument(mirrorPageResult);
         if (!downloadUrl) {
           throw new Error(`Couldn't find the download url for "${entry.title}"`);
         }
@@ -210,7 +208,9 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
   clearFinishedDownloads: () => {
     const store = get();
     set({
-      downloads: store.downloads.filter((entry) => store.inDownloadQueueEntryIds.includes(entry.id)),
+      downloads: store.downloads.filter((entry) =>
+        store.inDownloadQueueEntryIds.includes(entry.id)
+      ),
     });
   },
 });

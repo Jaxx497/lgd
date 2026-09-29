@@ -20,13 +20,54 @@ The binary is written to `standalone-executables/lgd-<os>-<arch>`.
 ## Usage
 
 ```
-lgd                         interactive mode
-lgd -s "The Art of War"     start with a search
-lgd -d <MD5>                download one file
-lgd -b <MD5LIST.txt>        download every MD5 in a file (one per line)
-lgd -u <MD5>                print the download URL
-lgd -h                      help
+lgd                           interactive mode
+lgd -s "The Art of War"       start with a search
+lgd -s "art of war" -e epub   only show epub results ("-e all" for every type)
+lgd -d <MD5> -o ~/books       download one file into ~/books
+lgd -b <MD5LIST.txt>          download every MD5 in a file (one per line)
+lgd -u <MD5>                  print the download URL
+lgd -h                        help
 ```
+
+`-b` and `-d` exit with code 1 if any download failed.
+
+### Keys (results list)
+
+| Key | Action |
+|---|---|
+| `j` `k` / `↓` `↑` | move (a number first moves that many rows) |
+| `g` `G` | first / last row |
+| `Ctrl-d` `Ctrl-u`, `PgDn` `PgUp` | half page / page |
+| `<n>` then `Enter` (or `<n>G`) | jump to row n |
+| `Enter` / `d` | download |
+| `i` / `l` / `→` | info (`h` / `←` / `Esc` back) |
+| `]` `[` (or `n` `p`) | next / previous page (on a short filtered page `]` looks further) |
+| `f` | filter by filetype (`pdf,epub`; empty for all) |
+| `t` | downloads panel (`x` remove queued, `r` retry failed, `c` clear finished) |
+| `/` / `Esc` | new search (previous query pre-filled) |
+| `?` | help |
+| `q` / `Ctrl-c` | quit (asks first while downloads are running) |
+
+Existing files are never overwritten: a second copy is saved as `name(1).ext`.
+
+### Config
+
+`~/.config/lgd/config.json` is created on first run with every option commented out. Lines starting with `//` are comments.
+
+```jsonc
+{
+  // default: current directory
+  "downloadDir": "~/books",
+  // default: all filetypes
+  "extensions": ["pdf", "epub"],
+  // also available: language, pages, publisher
+  "columns": ["index", "ext", "title", "authors", "year", "size"],
+  // tried first; see open-slum.org for mirrors
+  "mirror": "https://libgen.li"
+}
+```
+
+Command-line flags override the file.
 
 ## History (original libgen-downloader)
 

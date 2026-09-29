@@ -31,7 +31,8 @@ export function AppHeader() {
       <Text color="gray">{mirror}</Text>
       {showResults && (
         <Text>
-          <Text color="gray"> · </Text>Results for <Text color="green">&quot;{searchValue}&quot;</Text>
+          <Text color="gray"> · </Text>Results for{" "}
+          <Text color="green">&quot;{searchValue}&quot;</Text>
           <Text color="gray"> · </Text>page <Text color="yellow">{currentPage}</Text>
           <Text color="gray">{PAGE_STATE[nextPageStatus]}</Text>
           {filter.length > 0 && <Text color="magenta"> · {filter.join(",")}</Text>}
