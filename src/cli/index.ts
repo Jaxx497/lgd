@@ -10,6 +10,7 @@ export const cli = meow(
     -d, --download <MD5>      download one file
     -b, --bulk <MD5LIST.txt>  download every MD5 in a file (one per line)
     -u, --url <MD5>           print the download URL
+    -e, --ext <pdf,epub>      only show these filetypes ("all" for every type)
     -o, --output <dir>        download directory (overrides the config file)
     -h, --help                display help
 
@@ -17,7 +18,7 @@ export const cli = meow(
 
   Examples
     $ lgd
-    $ lgd -s "The Art of War"
+    $ lgd -s "The Art of War" -e epub
     $ lgd -d 1234567890abcdef1234567890abcdef -o ~/books
     $ lgd -b ./md5-list.txt
 `,

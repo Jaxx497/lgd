@@ -13,7 +13,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 | S3 | Quit guard (`q` / `Ctrl-c`) | none | done |
 | S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | done |
 | S5 | User config file | none (S4 uses its `columns`) | done |
-| S6 | Filetype filter + drop bad results | S4, S5 | todo |
+| S6 | Filetype filter + drop bad results | S4, S5 | done |
 | S7 | Downloads panel (`t`) | S4 | todo |
 | S8 | Core logic review and refactor | S1–S7 | todo |
 
@@ -78,7 +78,7 @@ Goal: one plain scrolling table, no option rows, no expansion, hotkeys for every
 **Header (one line)**: `libgen.li · Results for "art of war" · page 2 · next ▸ · pdf,epub`
 - Shows the mirror, the query, page state, and the active filter. No app name, version, GitHub link, or update check (remove the `latestVersion` display and its fetch field). No bulk-queue count.
 - On the search screen the header is just the mirror.
-- Page state text: `next ▸` (more available), `last page`, `checking…`, `retry: r` (next-page check failed).
+- Page state text: `next ▸` (more available), `] find more` (short filtered page), `last page`.
 
 **Body**: rows fill the terminal (`stdout.rows` minus header, status/panel, footer, border). Width is `stdout.columns` minus a small margin (remove the 80-column cap). Fix `use-stdout-dimensions.tsx` initial rows bug. Page size stays 25; the table scrolls inside it. Below ~40×10, rows show only index, extension, title.
 
@@ -105,7 +105,6 @@ Goal: one plain scrolling table, no option rows, no expansion, hotkeys for every
 | `d` / `Enter` | download highlighted Entry |
 | `i` / `l` / `→` | open Info |
 | `]` or `n` / `[` or `p` | next / previous page |
-| `r` | retry a failed next-page check |
 | `/` or `Esc` | restart the search (search screen, previous query pre-filled) |
 | `f` | edit filter (S6) |
 | `t` | Downloads panel (S7) |
@@ -184,6 +183,7 @@ Template:
   - With no filter: unchanged behaviour (25 per request).
 - Header shows the active filter. If a page is still empty after the cap: "no matches; press `]` to keep looking".
 - Files: `src/tui/store/events.ts`, `src/tui/store/cache.ts`, `src/api/adapters/libgen-plus-adapter.ts` (`getSearchURL` page size), `src/cli/*`, `test/filter.test.ts` (new), `test/search.integration.test.ts`.
+- **Done.** One code path for both cases: `collectResults` walks mirror chunks (25 rows unfiltered, 100 filtered; measured 100 rows at ~7–10 s vs ~2.5–5 s for 25, so unfiltered stays at 25) and `showPage` slices out 25. This replaced the background next-page prefetch (`checkNextPage`, its `checking`/`error` states and the `r` key): the last page is known when the mirror returns a short chunk. The fetch cap applies per page turn; on a short page `]` looks further before moving on. `f` edits the filter in the footer; it is not saved.
 
 ### S7. Downloads panel
 - Collapsed (default): one status line above the footer: `▸ Downloads: 1 active · 2 queued · 2 done · 0 failed`. Never auto-expands.

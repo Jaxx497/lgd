@@ -5,10 +5,9 @@ import type { NextPageStatus } from "../store/app";
 
 const PAGE_STATE: Record<NextPageStatus, string> = {
   idle: "",
-  checking: " · checking…",
   ready: " · next ▸",
+  partial: " · ] find more",
   unavailable: " · last page",
-  error: " · retry: r",
 };
 
 export function AppHeader() {
@@ -17,6 +16,7 @@ export function AppHeader() {
   const searchValue = useBoundStore((state) => state.searchValue);
   const currentPage = useBoundStore((state) => state.currentPage);
   const nextPageStatus = useBoundStore((state) => state.nextPageStatus);
+  const filter = useBoundStore((state) => state.filter);
 
   let mirror = "connecting…";
   if (mirrorAdapter) {
@@ -34,6 +34,7 @@ export function AppHeader() {
           <Text color="gray"> · </Text>Results for <Text color="green">&quot;{searchValue}&quot;</Text>
           <Text color="gray"> · </Text>page <Text color="yellow">{currentPage}</Text>
           <Text color="gray">{PAGE_STATE[nextPageStatus]}</Text>
+          {filter.length > 0 && <Text color="magenta"> · {filter.join(",")}</Text>}
         </Text>
       )}
     </Text>

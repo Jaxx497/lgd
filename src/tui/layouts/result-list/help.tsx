@@ -8,8 +8,8 @@ const KEYS: [string, string][] = [
   ["<n> ⏎  or <n>G", "jump to row n"],
   ["⏎ d", "download"],
   ["i l →", "info"],
-  ["] n  [ p", "next / previous page"],
-  ["r", "retry the next-page check"],
+  ["] n  [ p", "next / previous page (] also looks further on a short page)"],
+  ["f", "filter by filetype (pdf,epub; empty for all)"],
   ["/ esc", "new search"],
   ["q ctrl-c", "quit"],
 ];

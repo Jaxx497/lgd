@@ -3,7 +3,8 @@ import { Entry } from "../../api/models/entry";
 import { LAYOUT_KEY } from "../layouts/keys";
 import { clearScreen } from "../helpers/screen";
 
-export type NextPageStatus = "idle" | "checking" | "ready" | "unavailable" | "error";
+// ready: more pages; partial: this page is short but more matches may exist; unavailable: last page
+export type NextPageStatus = "idle" | "ready" | "partial" | "unavailable";
 
 export type MirrorCheckStatus = "pending" | "checking" | "ok" | "failed";
 
@@ -17,6 +18,7 @@ export interface IAppState {
 
   isLoading: boolean;
   quitPromptVisible: boolean;
+  isEditingFilter: boolean;
 
   loaderMessage: string;
   searchValue: string;
@@ -39,6 +41,7 @@ export interface IAppState {
 
   setIsLoading: (isLoading: boolean) => void;
   setQuitPromptVisible: (quitPromptVisible: boolean) => void;
+  setIsEditingFilter: (isEditingFilter: boolean) => void;
 
   setLoaderMessage: (loaderMessage: string) => void;
   setSearchValue: (searchValue: string) => void;
@@ -62,6 +65,7 @@ export interface IAppState {
 export const initialAppState = {
   isLoading: false,
   quitPromptVisible: false,
+  isEditingFilter: false,
 
   loaderMessage: "",
   searchValue: "",
@@ -94,6 +98,7 @@ export const createAppStateSlice = (
 
   setIsLoading: (isLoading: boolean) => set({ isLoading }),
   setQuitPromptVisible: (quitPromptVisible: boolean) => set({ quitPromptVisible }),
+  setIsEditingFilter: (isEditingFilter: boolean) => set({ isEditingFilter }),
 
   setLoaderMessage: (loaderMessage: string) => set({ loaderMessage }),
   setSearchValue: (searchValue: string) => set({ searchValue }),

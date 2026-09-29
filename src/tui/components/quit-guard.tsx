@@ -8,6 +8,7 @@ export function QuitGuard() {
   const activeLayout = useBoundStore((state) => state.activeLayout);
   const isLoading = useBoundStore((state) => state.isLoading);
   const errorMessage = useBoundStore((state) => state.errorMessage);
+  const isEditingFilter = useBoundStore((state) => state.isEditingFilter);
   const quitPromptVisible = useBoundStore((state) => state.quitPromptVisible);
   const setQuitPromptVisible = useBoundStore((state) => state.setQuitPromptVisible);
   const requestQuit = useBoundStore((state) => state.requestQuit);
@@ -17,7 +18,7 @@ export function QuitGuard() {
 
   // `q` must stay typeable in text inputs
   const textInputFocused =
-    activeLayout === LAYOUT_KEY.SEARCH_LAYOUT && !isLoading && !errorMessage;
+    isEditingFilter || (activeLayout === LAYOUT_KEY.SEARCH_LAYOUT && !isLoading && !errorMessage);
 
   useInput((input, key) => {
     const isCtrlC = key.ctrl && input === "c";

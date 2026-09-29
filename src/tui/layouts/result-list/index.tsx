@@ -9,6 +9,7 @@ import { LAYOUT_KEY } from "../keys";
 import { ResultListLoadingSkeleton } from "./result-list-loading-skeleton";
 import { ResultRow } from "./result-row";
 import { Help } from "./help";
+import { FilterPrompt } from "./filter-prompt";
 
 // Lines outside the table: header, table border (2), key hints, and up to 3 status lines
 // (downloads, warning, quit prompt), plus one spare so Ink never fills the whole screen.
@@ -16,7 +17,8 @@ const RESERVED_ROWS = 8;
 // App margin (2) + table border (2) + table padding (2) + row pointer (2).
 const RESERVED_COLUMNS = 8;
 
-const HINTS = "j/k move · <n>⏎ jump · ⏎/d download · i info · ]/[ page · / search · ? help · q quit";
+const HINTS =
+  "j/k move · <n>⏎ jump · ⏎/d download · i info · ]/[ page · f filter · / search · ? help · q quit";
 
 const ResultList: FC = () => {
   const entries = useBoundStore((state) => state.entries);
@@ -26,11 +28,11 @@ const ResultList: FC = () => {
   const quitPromptVisible = useBoundStore((state) => state.quitPromptVisible);
   const currentPage = useBoundStore((state) => state.currentPage);
   const nextPageStatus = useBoundStore((state) => state.nextPageStatus);
-  const searchValue = useBoundStore((state) => state.searchValue);
   const pushDownloadQueue = useBoundStore((state) => state.pushDownloadQueue);
   const nextPage = useBoundStore((state) => state.nextPage);
   const previousPage = useBoundStore((state) => state.prevPage);
-  const checkNextPage = useBoundStore((state) => state.checkNextPage);
+  const isEditingFilter = useBoundStore((state) => state.isEditingFilter);
+  const setIsEditingFilter = useBoundStore((state) => state.setIsEditingFilter);
   const backToSearch = useBoundStore((state) => state.backToSearch);
   const setDetailedEntry = useBoundStore((state) => state.setDetailedEntry);
   const setActiveLayout = useBoundStore((state) => state.setActiveLayout);
@@ -100,23 +102,28 @@ const ResultList: FC = () => {
       } else if ((input === "i" || input === "l" || key.rightArrow) && entry) {
         setDetailedEntry(entry);
         setActiveLayout(LAYOUT_KEY.DETAIL_LAYOUT);
-      } else if ((input === "]" || input === "n") && nextPageStatus === "ready") {
+      } else if (input === "]" || input === "n") {
         nextPage();
       } else if ((input === "[" || input === "p") && currentPage > 1) {
         previousPage();
-      } else if (input === "r" && nextPageStatus === "error") {
-        checkNextPage(searchValue, currentPage + 1);
+      } else if (input === "f") {
+        setIsEditingFilter(true);
       } else if (input === "/" || key.escape) {
         backToSearch();
       } else if (input === "?") {
         setShowHelp(true);
       }
     },
-    { isActive: !isLoading && !quitPromptVisible }
+    { isActive: !isLoading && !quitPromptVisible && !isEditingFilter }
   );
 
   if (isLoading) {
     return <ResultListLoadingSkeleton height={height} />;
+  }
+
+  let emptyMessage = "No results.";
+  if (nextPageStatus === "partial") {
+    emptyMessage = "No matches yet. Press ] to keep looking, or f to change the filter.";
   }
 
   const layout = layoutColumns(
@@ -129,7 +136,7 @@ const ResultList: FC = () => {
     <Box flexDirection="column">
       <ContentContainer>
         {showHelp && <Help />}
-        {!showHelp && entries.length === 0 && <Text color="gray">No results.</Text>}
+        {!showHelp && entries.length === 0 && <Text color="gray">{emptyMessage}</Text>}
         {!showHelp &&
           entries
             .slice(top, top + height)
@@ -143,10 +150,13 @@ const ResultList: FC = () => {
               />
             ))}
       </ContentContainer>
-      <Text wrap="truncate-end">
-        {count && <Text color="yellow">:{count} </Text>}
-        <KeyHints hints={HINTS} />
-      </Text>
+      {isEditingFilter && <FilterPrompt />}
+      {!isEditingFilter && (
+        <Text wrap="truncate-end">
+          {count && <Text color="yellow">:{count} </Text>}
+          <KeyHints hints={HINTS} />
+        </Text>
+      )}
     </Box>
   );
 };

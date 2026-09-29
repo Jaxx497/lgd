@@ -1,11 +1,9 @@
 import { TCombinedStore } from "./index";
 import { Entry } from "../../api/models/entry";
-import { SEARCH_PAGE_SIZE } from "../../settings";
 
 export interface ICacheState {
   entryCacheMap: Record<string, Entry[]>;
   setEntryCacheMap: (searchURL: string, entryList: Entry[]) => void;
-  lookupPageCache: (pageNumber: number) => Entry[];
   resetEntryCacheMap: () => void;
 }
 
@@ -36,20 +34,5 @@ export const createCacheStateSlice = (
     set({
       entryCacheMap: {},
     });
-  },
-
-  lookupPageCache: (pageNumber: number) => {
-    const store = get();
-
-    const searchURLAsCacheMapKey = store.mirrorAdapter?.getSearchURL(
-      store.searchValue,
-      pageNumber,
-      SEARCH_PAGE_SIZE
-    );
-
-    if (!searchURLAsCacheMapKey) {
-      return [];
-    }
-    return store.entryCacheMap[searchURLAsCacheMapKey] || [];
   },
 });

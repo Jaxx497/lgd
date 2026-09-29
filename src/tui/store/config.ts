@@ -13,7 +13,9 @@ export interface IConfigState extends Config {
   mirrorAdapter: Adapter | undefined;
   mirror: Mirror | undefined;
   userConfig: UserConfig;
+  filter: string[];
   setUserConfig: (userConfig: UserConfig) => void;
+  setFilter: (filter: string[]) => void;
   fetchConfig: () => Promise<void>;
   switchMirror: (
     onMirrorStatus: (mirror: string, status: MirrorCheckStatus) => void
@@ -22,12 +24,13 @@ export interface IConfigState extends Config {
 
 export const initialConfigState: Omit<
   IConfigState,
-  "fetchConfig" | "switchMirror" | "setUserConfig"
+  "fetchConfig" | "switchMirror" | "setUserConfig" | "setFilter"
 > = {
   mirrorAdapter: undefined,
   mirrors: [],
   mirror: undefined,
   userConfig: defaultConfig(),
+  filter: [],
 };
 
 export const createConfigStateSlice = (
@@ -38,7 +41,8 @@ export const createConfigStateSlice = (
 ) => ({
   ...initialConfigState,
 
-  setUserConfig: (userConfig: UserConfig) => set({ userConfig }),
+  setUserConfig: (userConfig: UserConfig) => set({ userConfig, filter: userConfig.extensions }),
+  setFilter: (filter: string[]) => set({ filter }),
 
   fetchConfig: async () => {
     const store = get();
