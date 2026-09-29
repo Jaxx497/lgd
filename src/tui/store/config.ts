@@ -19,7 +19,6 @@ export interface IConfigState extends Config {
 
 export const initialConfigState: Omit<IConfigState, "fetchConfig" | "switchMirror"> = {
   mirrorAdapter: undefined,
-  latestVersion: "",
   mirrors: [],
   mirror: undefined,
 };

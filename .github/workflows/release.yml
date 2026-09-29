@@ -23,22 +23,22 @@ jobs:
         include:
           - os: ubuntu-latest
             target: bun-linux-x64
-            artifact: libgen-downloader-linux-x64
+            artifact: lgd-linux-x64
           - os: ubuntu-24.04-arm
             target: bun-linux-arm64
-            artifact: libgen-downloader-linux-arm64
+            artifact: lgd-linux-arm64
           - os: macos-15-intel
             target: bun-darwin-x64
-            artifact: libgen-downloader-macos-x64
+            artifact: lgd-macos-x64
           - os: macos-latest
             target: bun-darwin-arm64
-            artifact: libgen-downloader-macos-arm64
+            artifact: lgd-macos-arm64
           - os: windows-latest
             target: bun-windows-x64
-            artifact: libgen-downloader-windows-x64.exe
+            artifact: lgd-windows-x64.exe
           - os: windows-11-arm
             target: bun-windows-arm64
-            artifact: libgen-downloader-windows-arm64.exe
+            artifact: lgd-windows-arm64.exe
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -85,17 +85,13 @@ jobs:
           files: artifacts/*
           generate_release_notes: true
           body: |
-            ## libgen-downloader ${{ inputs.tag || github.ref_name }}
+            ## lgd ${{ inputs.tag || github.ref_name }}
 
             ### Installation
             Download the executable for your platform below and make it executable:
             ```bash
-            chmod +x libgen-downloader-*
+            chmod +x lgd-*
             ```
 
-            Or install via npm:
-            ```bash
-            npm install -g libgen-downloader
-            ```
 
             ---

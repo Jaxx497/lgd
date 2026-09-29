@@ -18,7 +18,6 @@ describe("configuration data", () => {
     const signal = new AbortController().signal;
 
     await expect(fetchConfig(signal)).resolves.toEqual({
-      latestVersion: "4.0.0",
       mirrors: [{ src: "https://mirror.example/", type: "libgen-plus" }],
     });
     expect(fetchMock).toHaveBeenCalledWith(CONFIGURATION_URL, { signal });

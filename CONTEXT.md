@@ -1,4 +1,4 @@
-# libgen-downloader
+# lgd
 
 A personal terminal app for searching a Library Genesis mirror and downloading books from it.
 

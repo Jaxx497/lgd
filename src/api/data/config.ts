@@ -11,7 +11,6 @@ export interface Mirror {
 }
 
 export interface Config {
-  latestVersion: string;
   mirrors: Mirror[];
 }
 
@@ -22,7 +21,6 @@ export async function fetchConfig(signal: AbortSignal): Promise<Config> {
     const config = json as Record<string, unknown>;
 
     return {
-      latestVersion: (config["latest_version"] as string) || "",
       mirrors: (config["mirrors"] as Mirror[]) || [],
     };
   } catch {

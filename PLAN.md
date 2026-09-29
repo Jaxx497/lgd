@@ -1,4 +1,4 @@
-# libgen-downloader: improvement plan
+# lgd: improvement plan
 
 Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downloader) by Ömercan Balandı, renamed `lgd` (see S0b). Vocabulary lives in `CONTEXT.md`. Each step below is one commit. After every step run `bun run typecheck && bun run lint && bun test`.
 
@@ -6,8 +6,8 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 
 | ID | Step | Depends on | Status |
 |----|------|-----------|--------|
-| S0 | Ponytail cleanup of existing code | none | done, uncommitted |
-| S0b | Rename to `lgd`, version 1.0.0, keep attribution | S0 | todo |
+| S0 | Ponytail cleanup of existing code | none | done |
+| S0b | Rename to `lgd`, version 1.0.0, keep attribution | S0 | done |
 | S1 | Never overwrite files (`name(1).ext`) | none | todo |
 | S2 | Remove interactive bulk selection | none | todo |
 | S3 | Quit guard (`q` / `Ctrl-c`) | none | todo |
@@ -40,7 +40,7 @@ Your original six goals map to: (1) filetype filter → S6, (2) more screen → 
   - `package.json`: `author` stays the original author; add `contributors` with Jaxx497; `description` says it is a fork; `repository`/`homepage` point to this fork (`origin` is `Jaxx497/libgen-downloader`).
   - `README.md`: retitled `lgd`, opens with "Fork of libgen-downloader by Ömercan Balandı", links to the original repo, and keeps the original's history/credits section; install text updated to this fork (drop the `npm i -g libgen-downloader` line unless publishing).
 - **Left pointing at the original on purpose:** `CONFIGURATION_URL` in `src/settings.ts` (the remote mirror list, `obsfx/libgen-downloader` `configuration` branch, currently reachable). It is a runtime dependency on the original repo; the `mirror` config key (S5) is the fallback if it ever disappears.
-- **Decide when building:** whether to keep the npm publish steps in `release.yml` (the name `lgd` on npm may be taken; for a personal fork they can be removed and `"private": true` set).
+- **Decided:** no workflow publishes to npm; `"private": true` set and npm install lines removed from README and release notes. The update notice in the header was removed here too (it compared against the original project's version).
 - Config directory: `~/.config/lgd/` (see S5).
 - Files: `package.json`, `bun.lock` (name only), `src/settings.ts`, `src/cli/index.ts`, `README.md`, `.github/workflows/release.yml`, `.npmignore` if needed.
 - Done when: `bun run build` and `bun run compile:linux-x64` produce `lgd` binaries; `lgd --help` shows the new name; grep for `libgen-downloader` finds only attribution links, the config URL, and the CHANGELOG-style history in the README.

@@ -3,7 +3,7 @@ import meow from "meow";
 export const cli = meow(
   `
 	Usage
-	  $ libgen-downloader <input>
+	  $ lgd <input>
 
 	Options
     -s, --search <query>      search for a book
@@ -13,11 +13,11 @@ export const cli = meow(
     -h, --help                display help
 
 	Examples
-    $ libgen-downloader    (start the app in interactive mode witout flags)
-    $ libgen-downloader -s "The Art of War"
-    $ libgen-downloader -b ./MD5_LIST_1695686580524.txt
-    $ libgen-downloader -u 1234567890abcdef1234567890abcdef
-    $ libgen-downloader -d 1234567890abcdef1234567890abcdef
+    $ lgd    (start the app in interactive mode without flags)
+    $ lgd -s "The Art of War"
+    $ lgd -b ./MD5_LIST_1695686580524.txt
+    $ lgd -u 1234567890abcdef1234567890abcdef
+    $ lgd -d 1234567890abcdef1234567890abcdef
 `,
   {
     importMeta: import.meta,
