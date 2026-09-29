@@ -10,7 +10,7 @@ Personal fork of [obsfx/libgen-downloader](https://github.com/obsfx/libgen-downl
 | S0b | Rename to `lgd`, version 1.0.0, keep attribution | S0 | done |
 | S1 | Never overwrite files (`name(1).ext`) | none | done |
 | S2 | Remove interactive bulk selection | none | done |
-| S3 | Quit guard (`q` / `Ctrl-c`) | none | todo |
+| S3 | Quit guard (`q` / `Ctrl-c`) | none | done |
 | S4 | List rework: no expansion, hotkeys, one-line header, full-screen table, columns | S2, S3 | todo |
 | S5 | User config file | none (S4 uses its `columns`) | todo |
 | S6 | Filetype filter + drop bad results | S4, S5 | todo |
@@ -68,7 +68,9 @@ Your original six goals map to: (1) filetype filter → S6, (2) more screen → 
 - Also handle `SIGTERM` (plain exit). CLI modes (`-d`, `-b`, `-u`) are unaffected.
 - Replaces `download-queue-before-exit` layout and the Exit row's guard.
 - Files: `src/tui/app.tsx`, `src/tui/index.tsx`, `src/tui/store/events.ts`, `src/tui/layouts/download-queue-before-exit/`, `src/tui/layouts/index.tsx`, `src/tui/layouts/keys.ts`.
-- To check while building: does an interrupted download leave a partial file; clean it up on quit or not.
+- **Done.** `QuitGuard` (`src/tui/components/quit-guard.tsx`) holds the global keys and the confirm line. Quitting deletes any file still being written (`removePartialDownloads`). CLI `-b`/`-d` keep immediate Ctrl-c. `SIGTERM` needed no code: Ink already restores the terminal via `signal-exit`.
+- **Bug fixed along the way:** `iterateQueue` only released an entry from `inDownloadQueueEntryIds` when the file transfer itself failed; earlier failures (no mirror page, no link) left it stuck, so the quit prompt would count a phantom download and the entry could never be retried.
+- **For S4:** Ink sends every key to every `useInput`, so the key that dismisses the prompt also reaches the list. The S4 key handlers must ignore input while `quitPromptVisible`.
 
 ### S4. List rework
 Goal: one plain scrolling table, no option rows, no expansion, hotkeys for everything.

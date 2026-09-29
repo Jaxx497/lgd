@@ -173,6 +173,42 @@ describe("download queue integration", () => {
   });
 });
 
+describe("quit guard", () => {
+  it("quits immediately when nothing is downloading", () => {
+    const handleExit = mock(() => {});
+    useBoundStore.setState({ handleExit });
+
+    useBoundStore.getState().requestQuit();
+
+    expect(handleExit).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks first while downloads are active, and quits on the second request", () => {
+    const handleExit = mock(() => {});
+    useBoundStore.setState({ handleExit, inDownloadQueueEntryIds: ["entry-1"] });
+
+    useBoundStore.getState().requestQuit();
+    expect(handleExit).not.toHaveBeenCalled();
+    expect(useBoundStore.getState().quitPromptVisible).toBe(true);
+
+    useBoundStore.getState().requestQuit();
+    expect(handleExit).toHaveBeenCalledTimes(1);
+  });
+
+  it("releases an entry whose download fails before the file transfer starts", async () => {
+    installNetworkFixture();
+    const entry = createEntry("entry-1", "missing");
+    useBoundStore.setState({ downloadQueue: [entry], inDownloadQueueEntryIds: [entry.id] });
+
+    await useBoundStore.getState().iterateQueue();
+
+    const state = useBoundStore.getState();
+    expect(state.inDownloadQueueEntryIds).toEqual([]);
+    expect(state.downloadProgressMap[entry.id]?.status).toBe(DownloadStatus.FAILED);
+    expect(state.totalFailed).toBe(1);
+  });
+});
+
 describe("bulk download integration", () => {
   it("builds the queue from a CLI MD5 list, processes it, then exits", async () => {
     const operateBulkDownloadQueue = mock(async () => {});

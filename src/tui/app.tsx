@@ -7,6 +7,7 @@ import { ErrorMessage } from "./components/error-message";
 import { useBoundStore } from "./store";
 import { AppHeader } from "./components/app-header";
 import { AppContainer } from "./components/app-container";
+import { QuitGuard } from "./components/quit-guard";
 
 interface Properties {
   doNotFetchConfigInitially: boolean;
@@ -35,7 +36,12 @@ export function App({ doNotFetchConfigInitially }: Properties) {
   }, [setRawMode]);
 
   if (errorMessage) {
-    return <ErrorMessage />;
+    return (
+      <>
+        <ErrorMessage />
+        <QuitGuard />
+      </>
+    );
   }
 
   return (
@@ -44,6 +50,7 @@ export function App({ doNotFetchConfigInitially }: Properties) {
       <Layouts />
       <DownloadIndicator />
       {warningMessage && <Text color="yellow">[!] {warningMessage}</Text>}
+      <QuitGuard />
     </AppContainer>
   );
 }

@@ -12,6 +12,15 @@ interface downloadFileArguments {
   directory?: string;
 }
 
+// Files currently being written, so quitting mid-download can remove them.
+const inProgressPaths = new Set<string>();
+
+export function removePartialDownloads() {
+  for (const filePath of inProgressPaths) {
+    fs.rmSync(filePath, { force: true });
+  }
+}
+
 // Reserve `name`, or `name(1)`, `name(2)`... if taken. The `wx` flag makes check-and-create atomic.
 export async function reserveUniquePath(directory: string, filename: string): Promise<string> {
   const { name, ext } = path.parse(filename);
@@ -67,6 +76,7 @@ export const downloadFile = async ({
     },
   });
 
+  inProgressPaths.add(filePath);
   try {
     await pipeline(
       Readable.from(downloadStream.body, { objectMode: false }),
@@ -84,5 +94,7 @@ export const downloadFile = async ({
   } catch {
     await fs.promises.rm(filePath, { force: true });
     throw new Error(`(${filename}) Error occurred while downloading file`);
+  } finally {
+    inProgressPaths.delete(filePath);
   }
 };

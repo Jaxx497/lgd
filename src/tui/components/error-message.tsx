@@ -6,7 +6,7 @@ import { ErrorMessageOption } from "../../options";
 
 export function ErrorMessage() {
   const errorMessage = useBoundStore((state) => state.errorMessage);
-  const handleExit = useBoundStore((state) => state.handleExit);
+  const requestQuit = useBoundStore((state) => state.requestQuit);
   const setErrorMessage = useBoundStore((state) => state.setErrorMessage);
   const handleSearchSubmit = useBoundStore((state) => state.handleSearchSubmit);
   const searchValue = useBoundStore((state) => state.searchValue);
@@ -35,7 +35,7 @@ export function ErrorMessage() {
           }),
           [ErrorMessageOption.EXIT]: {
             label: Label.EXIT,
-            onSelect: () => handleExit(),
+            onSelect: requestQuit,
           },
         }}
       />

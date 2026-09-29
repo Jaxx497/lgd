@@ -5,6 +5,7 @@ import { Entry } from "../../api/models/entry";
 import { SEARCH_PAGE_SIZE } from "../../settings";
 import { attempt } from "../../utilities";
 import { getDocument } from "../../api/data/document";
+import { removePartialDownloads } from "../../api/data/download";
 
 export type SearchResult =
   | { status: "success"; entries: Entry[] }
@@ -18,6 +19,7 @@ export interface IEventActions {
   handleSearchSubmit: () => Promise<void>;
   nextPage: () => Promise<void>;
   prevPage: () => Promise<void>;
+  requestQuit: () => void;
   handleExit: () => void;
 }
 
@@ -224,7 +226,18 @@ export const createEventActionsSlice = (
     store.setIsLoading(false);
   },
 
+  // `q` and Ctrl-c both land here. Asks first while anything is downloading or queued;
+  // a second request while the prompt is showing quits.
+  requestQuit: () => {
+    const store = get();
+    if (store.inDownloadQueueEntryIds.length === 0 || store.quitPromptVisible) {
+      store.handleExit();
+      return;
+    }
+    store.setQuitPromptVisible(true);
+  },
   handleExit: () => {
+    removePartialDownloads();
     // eslint-disable-next-line unicorn/no-process-exit
     process.exit(0);
   },

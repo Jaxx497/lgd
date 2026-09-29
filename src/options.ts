@@ -20,8 +20,3 @@ export enum ErrorMessageOption {
   RETRY,
   EXIT,
 }
-
-export enum BeforeExitOption {
-  YES,
-  NO,
-}

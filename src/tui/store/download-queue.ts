@@ -115,42 +115,33 @@ export const createDownloadQueueStateSlice = (
         break;
       }
 
-      store.updateCurrentDownloadProgress(entry.id, {
-        status: DownloadStatus.CONNECTING_TO_LIBGEN,
-      });
-
-      const detailPageUrl = store.mirrorAdapter?.getPageURL(entry.mirror);
-      if (!detailPageUrl) {
-        store.setWarningMessage(`Couldn't get the detail page URL for "${entry.title}"`);
-        store.increaseTotalFailed();
-        continue;
-      }
-
-      const mirrorPageResult = await attempt((signal) => getDocument(detailPageUrl, signal));
-      if (!mirrorPageResult) {
-        store.setWarningMessage(`Couldn't fetch the mirror page for "${entry.title}"`);
-        store.increaseTotalFailed();
-        continue;
-      }
-
-      const downloadUrl = store.mirrorAdapter?.getMainDownloadURLFromDocument(
-        mirrorPageResult.document
-      );
-
-      if (!downloadUrl) {
-        store.setWarningMessage(`Couldn't find the download url for "${entry.title}"`);
-        store.increaseTotalFailed();
-        continue;
-      }
-
-      const downloadStream = await attempt((signal) => fetchLibgen(downloadUrl as string, signal));
-      if (!downloadStream) {
-        store.setWarningMessage(`Couldn't fetch the download stream for "${entry.title}"`);
-        store.increaseTotalFailed();
-        continue;
-      }
-
       try {
+        store.updateCurrentDownloadProgress(entry.id, {
+          status: DownloadStatus.CONNECTING_TO_LIBGEN,
+        });
+
+        const detailPageUrl = store.mirrorAdapter?.getPageURL(entry.mirror);
+        if (!detailPageUrl) {
+          throw new Error(`Couldn't get the detail page URL for "${entry.title}"`);
+        }
+
+        const mirrorPageResult = await attempt((signal) => getDocument(detailPageUrl, signal));
+        if (!mirrorPageResult) {
+          throw new Error(`Couldn't fetch the mirror page for "${entry.title}"`);
+        }
+
+        const downloadUrl = store.mirrorAdapter?.getMainDownloadURLFromDocument(
+          mirrorPageResult.document
+        );
+        if (!downloadUrl) {
+          throw new Error(`Couldn't find the download url for "${entry.title}"`);
+        }
+
+        const downloadStream = await attempt((signal) => fetchLibgen(downloadUrl, signal));
+        if (!downloadStream) {
+          throw new Error(`Couldn't fetch the download stream for "${entry.title}"`);
+        }
+
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.DOWNLOADING,
         });
@@ -177,8 +168,8 @@ export const createDownloadQueueStateSlice = (
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.DOWNLOADED,
         });
-      } catch {
-        store.setWarningMessage(`Couldn't download "${entry.title}"`);
+      } catch (error) {
+        store.setWarningMessage((error as Error).message);
         store.increaseTotalFailed();
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.FAILED,

@@ -3,7 +3,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { Writable } from "node:stream";
-import { downloadFile, reserveUniquePath } from "../src/api/data/download";
+import {
+  downloadFile,
+  removePartialDownloads,
+  reserveUniquePath,
+} from "../src/api/data/download";
 
 const createResponse = (filename: string, chunks: Uint8Array[]) => {
   const body = new ReadableStream<Uint8Array>({
@@ -168,5 +172,35 @@ describe("reserveUniquePath", () => {
     fs.writeFileSync(path.join(directory, long), "");
     const reserved = await reserveUniquePath(directory, long);
     expect(path.basename(reserved)).toBe(`${"a".repeat(124)}(1).pdf`);
+  });
+});
+
+describe("removePartialDownloads", () => {
+  it("deletes files that are still being written", async () => {
+    const gate = Promise.withResolvers<void>();
+    const body = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        controller.enqueue(Buffer.from("partial"));
+        await gate.promise;
+        controller.close();
+      },
+    });
+    const pending = downloadFile({
+      downloadStream: new Response(body, {
+        headers: { "content-disposition": 'attachment; filename="slow.epub"' },
+      }),
+      onStart() {},
+      onData() {},
+      directory,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(fs.existsSync(path.join(directory, "slow.epub"))).toBe(true);
+
+    removePartialDownloads();
+    expect(fs.existsSync(path.join(directory, "slow.epub"))).toBe(false);
+
+    gate.resolve();
+    await pending.catch(() => {});
   });
 });

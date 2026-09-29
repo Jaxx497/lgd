@@ -16,6 +16,7 @@ export interface IAppState {
   CLIMode: boolean;
 
   isLoading: boolean;
+  quitPromptVisible: boolean;
   anyEntryExpanded: boolean;
   showSearchMinCharWarning: boolean;
 
@@ -41,6 +42,7 @@ export interface IAppState {
   setCLIMode: (CLIMode: boolean) => void;
 
   setIsLoading: (isLoading: boolean) => void;
+  setQuitPromptVisible: (quitPromptVisible: boolean) => void;
   setAnyEntryExpanded: (anyEntryExpanded: boolean) => void;
 
   setLoaderMessage: (loaderMessage: string) => void;
@@ -65,6 +67,7 @@ export interface IAppState {
 
 export const initialAppState = {
   isLoading: false,
+  quitPromptVisible: false,
   anyEntryExpanded: false,
   showSearchMinCharWarning: true,
 
@@ -100,6 +103,7 @@ export const createAppStateSlice = (
   ...initialAppState,
 
   setIsLoading: (isLoading: boolean) => set({ isLoading }),
+  setQuitPromptVisible: (quitPromptVisible: boolean) => set({ quitPromptVisible }),
   setAnyEntryExpanded: (anyEntryExpanded: boolean) => set({ anyEntryExpanded }),
 
   setLoaderMessage: (loaderMessage: string) => set({ loaderMessage }),
@@ -141,14 +145,7 @@ export const createAppStateSlice = (
         store.checkNextPage(store.searchValue, store.currentPage + 1);
       },
       handlePrevPageOption: store.prevPage,
-      handleExitOption: () => {
-        if (get().inDownloadQueueEntryIds.length > 0) {
-          store.setActiveLayout(LAYOUT_KEY.DOWNLOAD_QUEUE_BEFORE_EXIT_LAYOUT);
-          return;
-        }
-
-        store.handleExit();
-      },
+      handleExitOption: store.requestQuit,
     });
     set({ entries, listItems });
   },

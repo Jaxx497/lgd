@@ -23,5 +23,6 @@ export default function renderTUI({
   const store = useBoundStore.getState();
   store.setActiveLayout(initialLayout || LAYOUT_KEY.SEARCH_LAYOUT);
 
-  render(<App doNotFetchConfigInitially={doNotFetchConfigInitially} />);
+  // Ctrl-c is handled by QuitGuard so it can ask before killing active downloads.
+  render(<App doNotFetchConfigInitially={doNotFetchConfigInitially} />, { exitOnCtrlC: false });
 }

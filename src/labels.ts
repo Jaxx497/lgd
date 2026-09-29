@@ -18,6 +18,4 @@ export default {
   NEXT_PAGE_ERROR: "→ Next Page (?) (Retry)",
   NEXT_PAGE_UNAVAILABLE: "→ Next Page (no results on next page)",
   RETRY: "↻ Retry",
-  YES: "Yes",
-  NO: "No",
 };

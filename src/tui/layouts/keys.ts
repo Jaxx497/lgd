@@ -3,5 +3,4 @@ export enum LAYOUT_KEY {
   RESULT_LIST_LAYOUT = "result_list_layout",
   DETAIL_LAYOUT = "detail_layout",
   BULK_DOWNLOAD_LAYOUT = "bulk_download_layout",
-  DOWNLOAD_QUEUE_BEFORE_EXIT_LAYOUT = "download_queue_before_exit_layout",
 }
