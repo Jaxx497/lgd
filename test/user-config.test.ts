@@ -13,7 +13,7 @@ import {
 let directory: string;
 
 beforeEach(() => {
-  directory = fs.mkdtempSync(path.join(os.tmpdir(), "lgd-config-"));
+  directory = fs.mkdtempSync(path.join(os.tmpdir(), "libgen-dl-config-"));
 });
 
 afterEach(() => {
@@ -68,9 +68,21 @@ describe("parseUserConfig", () => {
 
 describe("loadUserConfig", () => {
   it("creates the commented template on first run", () => {
-    const configPath = path.join(directory, "lgd", "config.json");
-    expect(loadUserConfig(configPath).config).toEqual(defaultConfig());
+    const configPath = path.join(directory, "libgen-dl", "config.json");
+    expect(loadUserConfig(configPath, path.join(directory, "none")).config).toEqual(
+      defaultConfig()
+    );
     expect(fs.readFileSync(configPath, "utf8")).toBe(CONFIG_TEMPLATE);
+  });
+
+  it("moves the config folder over from before the rename", () => {
+    const legacyDirectory = path.join(directory, "lgd");
+    fs.mkdirSync(legacyDirectory);
+    fs.writeFileSync(path.join(legacyDirectory, "config.json"), '{ "extensions": ["pdf"] }');
+    const configPath = path.join(directory, "libgen-dl", "config.json");
+
+    expect(loadUserConfig(configPath, legacyDirectory).config.extensions).toEqual(["pdf"]);
+    expect(fs.existsSync(legacyDirectory)).toBe(false);
   });
 
   it("never overwrites an existing file", () => {

@@ -11,7 +11,7 @@ export const getTheme = (): Theme => {
 export const setTheme = (theme: Theme) => {
   document.documentElement.dataset.theme = theme;
   try {
-    localStorage.setItem("lgd.theme", theme);
+    localStorage.setItem("libgen-dl.theme", theme);
   } catch {
     // storage unavailable: the choice just won't survive a restart
   }

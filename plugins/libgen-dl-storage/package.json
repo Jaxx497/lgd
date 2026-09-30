@@ -1,5 +1,5 @@
 {
-  "name": "lgd-storage",
+  "name": "libgen-dl-storage",
   "version": "1.0.0",
   "private": true,
   "description": "Publishes a downloaded file into Downloads or a folder the user picked (Android)",

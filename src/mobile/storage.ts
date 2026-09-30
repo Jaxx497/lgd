@@ -1,6 +1,6 @@
 import { registerPlugin, type PluginListenerHandle } from "@capacitor/core";
 
-// Native side: plugins/lgd-storage.
+// Native side: plugins/libgen-dl-storage.
 interface StoragePlugin {
   pickFolder(): Promise<Folder>;
   startKeepAlive(options: { text: string; percent: number }): Promise<void>;
@@ -27,7 +27,7 @@ export interface Folder {
 
 export const Storage = registerPlugin<StoragePlugin>("Storage");
 
-const KEY = "lgd.folder";
+const KEY = "libgen-dl.folder";
 
 // undefined = the public Downloads folder
 export const getFolder = (): Folder | undefined => {

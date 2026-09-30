@@ -24,5 +24,5 @@ export const SEARCH_PAGE_SIZE = 25;
 export const FETCH_CHUNK_SIZE = 100;
 export const FETCH_CAP = 3;
 
-export const LIBGEN_USER_AGENT = `lgd/${version}`;
+export const LIBGEN_USER_AGENT = `libgen-dl/${version}`;
 export const SEARCH_MIN_CHAR = 3;

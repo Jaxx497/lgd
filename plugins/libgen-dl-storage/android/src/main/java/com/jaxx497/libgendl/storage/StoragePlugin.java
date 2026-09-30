@@ -1,4 +1,4 @@
-package com.jaxx497.lgd.storage;
+package com.jaxx497.libgendl.storage;
 
 import android.Manifest;
 import android.app.Activity;

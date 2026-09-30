@@ -53,7 +53,7 @@ export const createConfigStateSlice = (set: SetState, get: GetState) => ({
       remote = FALLBACK_MIRRORS;
     }
     const mirrors: Mirror[] = remote.filter(
-      // libgen-plus is the only mirror type lgd can parse
+      // libgen-plus is the only mirror type libgen-dl can parse
       (mirror) => mirror.type === "libgen-plus" && mirror.src !== preferred
     );
     if (preferred) {

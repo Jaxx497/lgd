@@ -26,7 +26,7 @@ const createResponse = (filename: string, chunks: Uint8Array[]) => {
 let directory: string;
 
 beforeEach(() => {
-  directory = fs.mkdtempSync(path.join(os.tmpdir(), "lgd-test-"));
+  directory = fs.mkdtempSync(path.join(os.tmpdir(), "libgen-dl-test-"));
 });
 
 afterEach(() => {

@@ -1,4 +1,4 @@
-package com.jaxx497.lgd.storage;
+package com.jaxx497.libgendl.storage;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -60,10 +60,10 @@ public class DownloadService extends Service {
         }
 
         if (wake == null) {
-            wake = getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "lgd:download");
+            wake = getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "libgen-dl:download");
             wake.acquire(2 * 60 * 60 * 1000L); // ponytail: 2 h cap so a stuck queue can't hold the CPU forever
             wifi = ((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE))
-                .createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "lgd:download");
+                .createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "libgen-dl:download");
             wifi.acquire();
         }
         return START_NOT_STICKY; // the transfer dies with the process; restarting the service wouldn't resume it

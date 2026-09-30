@@ -1,14 +1,15 @@
 {
-  "name": "lgd",
+  "name": "libgen-dl",
   "version": "1.2.2",
   "private": true,
   "type": "module",
-  "description": "lgd: search and download books from LibGen in the terminal. Fork of libgen-downloader by Ömercan Balandı.",
+  "description": "libgen-dl: search and download books from LibGen in the terminal. Fork of libgen-downloader by Ömercan Balandı.",
   "main": "./build/index.js",
   "bin": {
+    "libgen-dl": "./build/index.js",
     "lgd": "./build/index.js"
   },
-  "homepage": "https://github.com/Jaxx497/lgd",
+  "homepage": "https://github.com/Jaxx497/libgen-dl",
   "scripts": {
     "start": "tsx src/index.ts",
     "test": "vitest run",
@@ -41,7 +42,7 @@
   "license": "WTFPL",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Jaxx497/lgd.git"
+    "url": "https://github.com/Jaxx497/libgen-dl.git"
   },
   "devDependencies": {
     "@capacitor-community/file-opener": "^8.0.1",
@@ -63,7 +64,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unicorn": "^63.0.0",
-    "lgd-storage": "file:plugins/lgd-storage",
+    "libgen-dl-storage": "file:plugins/libgen-dl-storage",
     "prettier": "^3.7.4",
     "react-dom": "19.2.3",
     "rimraf": "^6.1.2",

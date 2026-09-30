@@ -3,7 +3,7 @@ import meow from "meow";
 export const cli = meow(
   `
   Usage
-    $ lgd [options]
+    $ libgen-dl [options]
 
   Options
     -s, --search <query>      start with a search
@@ -14,13 +14,13 @@ export const cli = meow(
     -o, --output <dir>        download directory (overrides the config file)
     -h, --help                display help
 
-  Config file: ~/.config/lgd/config.json (created on first run)
+  Config file: ~/.config/libgen-dl/config.json (created on first run)
 
   Examples
-    $ lgd
-    $ lgd -s "The Art of War" -e epub
-    $ lgd -d 1234567890abcdef1234567890abcdef -o ~/books
-    $ lgd -b ./md5-list.txt
+    $ libgen-dl
+    $ libgen-dl -s "The Art of War" -e epub
+    $ libgen-dl -d 1234567890abcdef1234567890abcdef -o ~/books
+    $ libgen-dl -b ./md5-list.txt
 `,
   {
     importMeta: import.meta,

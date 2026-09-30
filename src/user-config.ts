@@ -15,7 +15,10 @@ export interface LoadedConfig {
   warnings: string[];
 }
 
-export const CONFIG_PATH = path.join(os.homedir(), ".config", "lgd", "config.json");
+export const CONFIG_PATH = path.join(os.homedir(), ".config", "libgen-dl", "config.json");
+// ponytail: the folder from before the rename to libgen-dl (1.3), moved over on first run. Drop
+// once nobody is upgrading from 1.2.
+const LEGACY_CONFIG_DIR = path.join(os.homedir(), ".config", "lgd");
 
 export const CONFIG_TEMPLATE = `{
   // Where downloads are saved (default: current directory)
@@ -105,8 +108,18 @@ export function parseUserConfig(text: string): LoadedConfig {
 }
 
 // Creates the commented template on first run; never overwrites an existing file.
-export function loadUserConfig(configPath = CONFIG_PATH): LoadedConfig {
+export function loadUserConfig(
+  configPath = CONFIG_PATH,
+  legacyDirectory = LEGACY_CONFIG_DIR
+): LoadedConfig {
   const warnings: string[] = [];
+  if (!fs.existsSync(path.dirname(configPath)) && fs.existsSync(legacyDirectory)) {
+    try {
+      fs.renameSync(legacyDirectory, path.dirname(configPath));
+    } catch {
+      // left where it is: the defaults below still work
+    }
+  }
   try {
     fs.mkdirSync(path.dirname(configPath), { recursive: true });
     fs.writeFileSync(configPath, CONFIG_TEMPLATE, { flag: "wx" });

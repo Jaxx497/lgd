@@ -13,7 +13,7 @@ await build({
   alias: { "react-devtools-core": "./scripts/devtools-stub.js" },
   // Some bundled dependencies still call require().
   banner: {
-    js: "#!/usr/bin/env node\nimport { createRequire as __lgdCreateRequire } from 'node:module'; const require = __lgdCreateRequire(import.meta.url);",
+    js: "#!/usr/bin/env node\nimport { createRequire as __libgenDlCreateRequire } from 'node:module'; const require = __libgenDlCreateRequire(import.meta.url);",
   },
 });
 fs.chmodSync("build/index.js", 0o755);
