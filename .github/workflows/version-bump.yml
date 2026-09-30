@@ -42,7 +42,7 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          git add package.json
+          git add package.json package-lock.json
           git commit -m "$VERSION"
           git tag "v$VERSION"
           git push
