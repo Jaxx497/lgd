@@ -6,9 +6,17 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
-    <meta name="theme-color" content="#0f1115" />
+    <meta name="theme-color" content="#ffffff" />
     <title>lgd</title>
     <link rel="stylesheet" href="style.css" />
+    <script>
+      // before first paint, so there's no flash: light unless dark was chosen
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem("lgd.theme") || "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

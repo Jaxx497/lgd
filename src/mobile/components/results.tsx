@@ -26,12 +26,7 @@ export default function Results() {
     );
   }
   if (s.isLoading) {
-    return (
-      <div className="note">
-        <div className="spin" />
-        {s.loaderMessage}
-      </div>
-    );
+    return <div className="note">{s.loaderMessage}</div>;
   }
   if (s.activeLayout !== LAYOUT_KEY.RESULT_LIST_LAYOUT) {
     return <div className="note">Search for a book or author.</div>;
