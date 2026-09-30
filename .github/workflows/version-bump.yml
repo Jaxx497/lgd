@@ -53,5 +53,6 @@ jobs:
     uses: ./.github/workflows/release.yml
     with:
       tag: v${{ needs.bump.outputs.version }}
+      publish: true
     permissions:
       contents: write

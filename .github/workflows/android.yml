@@ -2,6 +2,11 @@ name: Android APK
 
 on:
   workflow_dispatch:
+  workflow_call: # the release workflow builds the APK through this
+    inputs:
+      ref:
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -12,6 +17,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: actions/setup-node@v4 # the Capacitor CLI needs Node 22+
         with:
           node-version: 22
@@ -27,7 +34,9 @@ jobs:
       - run: npx cap add android && npx cap sync android
       - run: ./gradlew assembleDebug
         working-directory: android
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk lgd-android.apk
+      # ponytail: debug-signed (installs fine, just not Play Store material)
       - uses: actions/upload-artifact@v4
         with:
-          name: lgd-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: lgd-android.apk
+          path: lgd-android.apk

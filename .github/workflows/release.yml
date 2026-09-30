@@ -4,14 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to release (e.g., v3.0.3)"
+        description: "Tag to release (e.g., v1.0.0)"
         required: true
         type: string
+      publish:
+        description: "Publish the GitHub release (off = dry run: build everything, publish nothing)"
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       tag:
         required: true
         type: string
+      publish:
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -44,7 +51,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          # a dry run has no tag yet: build the current commit
+          ref: ${{ inputs.publish && inputs.tag || '' }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -71,8 +79,14 @@ jobs:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
 
+  apk:
+    uses: ./.github/workflows/android.yml
+    with:
+      ref: ${{ inputs.publish && inputs.tag || '' }}
+
   release:
-    needs: build
+    if: inputs.publish
+    needs: [build, apk]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -87,17 +101,13 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
+          tag_name: ${{ inputs.tag }}
           files: artifacts/*
           generate_release_notes: true
           body: |
-            ## lgd ${{ inputs.tag || github.ref_name }}
+            ## lgd ${{ inputs.tag }}
 
-            ### Installation
-            Download the executable for your platform below and make it executable:
-            ```bash
-            chmod +x lgd-*
-            ```
+            **Terminal:** download the executable for your platform and make it executable
+            (`chmod +x lgd-*`), or install with npm (see the README).
 
-
-            ---
+            **Android:** download `lgd-android.apk` and open it on your phone.
