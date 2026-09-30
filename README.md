@@ -23,8 +23,8 @@ A small Capacitor app shares the search and download logic with the TUI (`src/mo
 The **Android APK** workflow builds a debug APK on GitHub; run it from the Actions tab and
 download `lgd-debug-apk`. Locally, `bun run web` bundles the UI into `www/`.
 
-Downloads land in the app cache and open the Android share sheet via **Save**, since Android
-blocks direct writes to Downloads.
+Downloads land in the app's private cache, which file browsers can't see. **Open** launches the
+file in a reader app (falling back to the share sheet, where you can save a copy).
 
 ## Usage
 

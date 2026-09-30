@@ -5,6 +5,7 @@ import { KeyHints } from "../../components/key-hints";
 import { useBoundStore } from "../../store";
 import { useStdoutDimensions } from "../../hooks/use-stdout-dimensions";
 import { layoutColumns, scrollTopFor } from "../../helpers/table";
+import { RESULT_LIST_HINTS } from "../hints";
 import { LAYOUT_KEY } from "../keys";
 import { ResultListLoadingSkeleton } from "./result-list-loading-skeleton";
 import { ResultRow } from "./result-row";
@@ -12,14 +13,11 @@ import { Help } from "./help";
 import { FilterPrompt } from "./filter-prompt";
 import { DOWNLOADS_PANEL_EXTRA_ROWS } from "../../components/downloads-panel";
 
-// Lines outside the table: header, table border (2), key hints, and up to 3 status lines
-// (downloads, warning, quit prompt), plus one spare so Ink never fills the whole screen.
-const RESERVED_ROWS = 8;
+// Lines outside the table: header, table border (2), key hints, a blank line, and up to 3 status
+// lines (downloads, warning, quit prompt), plus one spare so Ink never fills the whole screen.
+const RESERVED_ROWS = 9;
 // App margin (2) + table border (2) + table padding (2) + row pointer (2).
 const RESERVED_COLUMNS = 8;
-
-const HINTS =
-  "j/k move · <n>⏎ jump · ⏎/d download · i info · ]/[ page · f filter · t downloads · / search · ? help · q quit";
 
 const ResultList: FC = () => {
   const entries = useBoundStore((state) => state.entries);
@@ -157,10 +155,10 @@ const ResultList: FC = () => {
             ))}
       </ContentContainer>
       {isEditingFilter && <FilterPrompt />}
-      {!isEditingFilter && (
+      {!isEditingFilter && !downloadsPanelOpen && (
         <Text wrap="truncate-end">
           {count && <Text color="yellow">:{count} </Text>}
-          <KeyHints hints={HINTS} />
+          <KeyHints hints={RESULT_LIST_HINTS} />
         </Text>
       )}
     </Box>

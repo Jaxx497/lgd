@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { useBoundStore } from "../store";
+import { DETAIL_HINTS, RESULT_LIST_HINTS } from "../layouts/hints";
 import { LAYOUT_KEY } from "../layouts/keys";
+import { KeyHints } from "./key-hints";
 import { DownloadStatus } from "../../download-statuses";
 import { getDownloadProgress, shortStatus } from "../helpers/progress";
 import { scrollTopFor } from "../helpers/table";
@@ -107,10 +109,17 @@ export function DownloadsPanel() {
 
   if (!isOpen) {
     return (
-      <Text color="gray" wrap="truncate-end">
-        ▸ {summary} · t
-      </Text>
+      <Box marginTop={1}>
+        <Text color="gray" wrap="truncate-end">
+          ▸ {summary} · t
+        </Text>
+      </Box>
     );
+  }
+
+  let hints = RESULT_LIST_HINTS;
+  if (activeLayout === LAYOUT_KEY.DETAIL_LAYOUT) {
+    hints = DETAIL_HINTS;
   }
 
   return (
@@ -148,6 +157,9 @@ export function DownloadsPanel() {
           </Box>
         );
       })}
+      <Box marginTop={1}>
+        <KeyHints hints={hints} />
+      </Box>
     </Box>
   );
 }

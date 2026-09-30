@@ -36,12 +36,15 @@ export async function saveFromUrl(arguments_: {
   arguments_.onStart(filename, 0);
   const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache });
 
+  // One event stream per download (the queue runs one at a time). onStart resets the progress, so
+  // call it once when the size is known, then report only what's new.
   let seen = 0;
+  let sized = false;
   const listener = await FileTransfer.addListener("progress", (status) => {
-    if (status.url !== arguments_.url) {
-      return;
+    if (!sized && status.lengthComputable) {
+      sized = true;
+      arguments_.onStart(filename, status.contentLength);
     }
-    arguments_.onStart(filename, status.contentLength);
     arguments_.onProgress(status.bytes - seen);
     seen = status.bytes;
   });

@@ -5,6 +5,7 @@ import { KeyHints } from "../../components/key-hints";
 import DetailRow from "./detail-row";
 import { useBoundStore } from "../../store";
 import { DownloadStatusAndProgress } from "../../components/download-status-and-progress";
+import { DETAIL_HINTS } from "../hints";
 import { LAYOUT_KEY } from "../keys";
 
 const Detail: FC = () => {
@@ -60,7 +61,7 @@ const Detail: FC = () => {
           </Text>
         )}
       </ContentContainer>
-      <KeyHints hints="⏎/d download · h/←/esc back · t downloads · q quit" />
+      {!downloadsPanelOpen && <KeyHints hints={DETAIL_HINTS} />}
     </Box>
   );
 };
