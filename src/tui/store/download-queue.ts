@@ -10,6 +10,7 @@ export interface IDownloadProgress {
   total: number;
   progress: number | undefined;
   status: DownloadStatus;
+  error?: string;
 }
 
 export interface IDownloadQueueState {
@@ -147,6 +148,7 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
         store.setWarningMessage((error as Error).message);
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.FAILED,
+          error: (error as Error).message,
         });
       } finally {
         store.removeEntryIdFromDownloadQueue(entry.id);

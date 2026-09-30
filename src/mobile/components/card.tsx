@@ -49,7 +49,7 @@ export default function Card({ entry }: { entry: Entry }) {
     }
     case DownloadStatus.FAILED: {
       action = <button onClick={() => push(entry)}>Retry</button>;
-      label = "Failed";
+      label = `Failed: ${download.error ?? "unknown error"}`;
       tone = " bad";
       break;
     }

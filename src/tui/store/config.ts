@@ -48,7 +48,11 @@ export const createConfigStateSlice = (set: SetState, get: GetState) => ({
 
     // The user's preferred mirror goes first, and still works if the remote list is unreachable.
     const preferred = store.userConfig.mirror;
-    const mirrors: Mirror[] = (config?.mirrors.length ? config.mirrors : FALLBACK_MIRRORS).filter(
+    let remote = config?.mirrors ?? [];
+    if (remote.length === 0) {
+      remote = FALLBACK_MIRRORS;
+    }
+    const mirrors: Mirror[] = remote.filter(
       // libgen-plus is the only mirror type lgd can parse
       (mirror) => mirror.type === "libgen-plus" && mirror.src !== preferred
     );
