@@ -11,6 +11,7 @@ export const cli = meow(
     -b, --bulk <MD5LIST.txt>  download every MD5 in a file (one per line)
     -u, --url <MD5>           print the download URL
     -e, --ext <pdf,epub>      only show these filetypes ("all" for every type)
+    -l, --language <name>     list books in this language first (e.g. English)
     -o, --output <dir>        download directory (overrides the config file)
     -h, --help                display help
 
@@ -44,6 +45,10 @@ export const cli = meow(
       ext: {
         type: "string",
         shortFlag: "e",
+      },
+      language: {
+        type: "string",
+        shortFlag: "l",
       },
       output: {
         type: "string",

@@ -7,6 +7,7 @@ export interface UserConfig {
   downloadDir: string;
   extensions: string[]; // empty = show every filetype
   columns: Column[];
+  language: string; // list these first; empty = mirror order
   mirror: string | undefined;
 }
 
@@ -30,6 +31,9 @@ export const CONFIG_TEMPLATE = `{
   // Results table columns, in order. Also available: language, pages, publisher
   // "columns": ["index", "ext", "title", "authors", "year", "size"],
 
+  // List books in this language first, e.g. "English" (default: mirror order)
+  // "language": "English",
+
   // Preferred mirror, tried first. To find mirrors, see open-slum.org
   // "mirror": "https://libgen.li"
 }
@@ -39,6 +43,7 @@ export const defaultConfig = (): UserConfig => ({
   downloadDir: process.cwd(),
   extensions: [],
   columns: DEFAULT_COLUMNS,
+  language: "",
   mirror: undefined,
 });
 
@@ -96,6 +101,14 @@ export function parseUserConfig(text: string): LoadedConfig {
     }
   }
 
+  if ("language" in raw) {
+    if (typeof raw.language === "string") {
+      config.language = raw.language.trim();
+    } else {
+      warnings.push('config: language must be a name like "English"');
+    }
+  }
+
   if ("mirror" in raw) {
     try {
       config.mirror = new URL(String(raw.mirror)).toString();
@@ -140,11 +153,14 @@ export function loadUserConfig(
 // CLI flags win over the config file. `-e all` clears a configured filter.
 export function applyFlags(
   config: UserConfig,
-  flags: { ext?: string; output?: string }
+  flags: { ext?: string; output?: string; language?: string }
 ): UserConfig {
   const result = { ...config };
   if (flags.ext !== undefined) {
     result.extensions = parseExtensions(flags.ext.split(","));
+  }
+  if (flags.language !== undefined) {
+    result.language = flags.language.trim();
   }
   if (flags.output) {
     result.downloadDir = path.resolve(expandHome(flags.output));

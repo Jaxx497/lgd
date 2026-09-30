@@ -31,6 +31,7 @@ describe("parseUserConfig", () => {
       "downloadDir": "~/books",
       "extensions": [".PDF", "epub"],
       "columns": ["index", "title", "language"],
+      "language": " English ",
       "mirror": "https://libgen.example"
     }`);
 
@@ -39,6 +40,7 @@ describe("parseUserConfig", () => {
       downloadDir: path.join(os.homedir(), "books"),
       extensions: ["pdf", "epub"],
       columns: ["index", "title", "language"],
+      language: "English",
       mirror: "https://libgen.example/",
     });
   });

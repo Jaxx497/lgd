@@ -8,7 +8,21 @@ The list of mirrors is still fetched from the original project's [configuration]
 
 ### Terminal
 
-Requires [Node.js](https://nodejs.org) 20+ and npm.
+Linux and macOS:
+
+```
+curl -fsSL https://raw.githubusercontent.com/Jaxx497/libgen-dl/master/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```
+irm https://raw.githubusercontent.com/Jaxx497/libgen-dl/master/install.ps1 | iex
+```
+
+Both download the latest standalone executable (no Node needed) and set up `lgd` as a short name too; run them again to update. There is no prebuilt binary for Intel Macs: build from source. Or grab a binary yourself from the [Releases](https://github.com/Jaxx497/libgen-dl/releases) page.
+
+To build from source instead (needs [Node.js](https://nodejs.org) 20+):
 
 ```
 git clone https://github.com/Jaxx497/libgen-dl
@@ -18,8 +32,6 @@ npm run build
 npm install -g .
 libgen-dl
 ```
-
-Or download a standalone executable for your platform from the [Releases](https://github.com/Jaxx497/libgen-dl/releases) page (no Node needed).
 
 ### Android
 
@@ -95,6 +107,8 @@ Existing files are never overwritten: a second copy is saved as `name(1).ext`.
   "extensions": ["pdf", "epub"],
   // also available: language, pages, publisher
   "columns": ["index", "ext", "title", "authors", "year", "size"],
+  // list books in this language first; default: mirror order
+  "language": "English",
   // tried first; see open-slum.org for mirrors
   "mirror": "https://libgen.li",
 }

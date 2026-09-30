@@ -3,7 +3,7 @@ import { LAYOUT_KEY } from "../layouts/keys";
 import Label from "../../labels";
 import { Entry } from "../../api/models/entry";
 import { FETCH_CAP, FETCH_CHUNK_SIZE, SEARCH_MIN_CHAR, SEARCH_PAGE_SIZE } from "../../settings";
-import { usableResults } from "../../api/filter";
+import { preferLanguage, usableResults } from "../../api/filter";
 import type { NextPageStatus } from "./app";
 import { attempt } from "../../utilities";
 import { getDocument } from "../../api/data/document";
@@ -79,17 +79,19 @@ export const createEventActionsSlice = (_set: SetState, get: GetState) => ({
   // match the filter, until `needed` are found, the mirror runs out, or FETCH_CAP new requests
   // were made.
   collectResults: async (needed: number): Promise<CollectResult> => {
-    const { searchValue, filter } = get();
+    const { searchValue, filter, userConfig } = get();
     const chunkSize = FETCH_CHUNK_SIZE;
 
     const results: Entry[] = [];
     const seen = new Set<string>(); // the same file can be listed in more than one chunk
+    // ponytail: only reorders what has been fetched so far (up to FETCH_CAP chunks per page turn)
+    const ordered = () => preferLanguage(results, userConfig.language);
     let newRequests = 0;
     for (let chunk = 1; ; chunk++) {
       const url = get().mirrorAdapter?.getSearchURL(searchValue, chunk, chunkSize) ?? "";
       const isCached = url in get().entryCacheMap;
       if (!isCached && newRequests >= FETCH_CAP) {
-        return { status: "success", results, exhausted: false };
+        return { status: "success", results: ordered(), exhausted: false };
       }
 
       const result = await get().search(searchValue, chunk, chunkSize);
@@ -107,10 +109,10 @@ export const createEventActionsSlice = (_set: SetState, get: GetState) => ({
         }
       }
       if (result.entries.length < chunkSize) {
-        return { status: "success", results, exhausted: true };
+        return { status: "success", results: ordered(), exhausted: true };
       }
       if (results.length >= needed) {
-        return { status: "success", results, exhausted: false };
+        return { status: "success", results: ordered(), exhausted: false };
       }
     }
   },

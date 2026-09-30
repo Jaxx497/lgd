@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Entry } from "../src/api/models/entry";
-import { usableResults } from "../src/api/filter";
+import { preferLanguage, usableResults } from "../src/api/filter";
 
 const entry = (overrides: Partial<Entry>): Entry => ({
   id: "id",
@@ -34,5 +34,17 @@ describe("usableResults", () => {
       pdf,
       epub,
     ]);
+  });
+});
+
+describe("preferLanguage", () => {
+  it("lists the preferred language first, keeping order otherwise", () => {
+    const [a, b, c] = [
+      entry({ id: "a", language: "Russian" }),
+      entry({ id: "b", language: "English, French" }),
+      entry({ id: "c", language: "english" }),
+    ];
+    expect(preferLanguage([a, b, c], "English")).toEqual([b, c, a]);
+    expect(preferLanguage([a, b, c], "")).toEqual([a, b, c]);
   });
 });

@@ -1,4 +1,6 @@
-import { Text } from "ink";
+import { useEffect, useState } from "react";
+import { Box, Text } from "ink";
+import { fetchNewerVersion, version } from "../../update";
 import { useBoundStore } from "../store";
 import { LAYOUT_KEY } from "../layouts/keys";
 import type { NextPageStatus } from "../store/app";
@@ -18,6 +20,11 @@ export function AppHeader() {
   const nextPageStatus = useBoundStore((state) => state.nextPageStatus);
   const filter = useBoundStore((state) => state.filter);
 
+  const [newer, setNewer] = useState<string>();
+  useEffect(() => {
+    void fetchNewerVersion().then(setNewer);
+  }, []);
+
   let mirror = "connecting…";
   if (mirrorAdapter) {
     mirror = new URL(mirrorAdapter.baseURL).host;
@@ -27,22 +34,30 @@ export function AppHeader() {
     activeLayout === LAYOUT_KEY.RESULT_LIST_LAYOUT || activeLayout === LAYOUT_KEY.DETAIL_LAYOUT;
 
   return (
-    <Text wrap="truncate-end">
-      <Text color="gray">{mirror}</Text>
-      {showResults && (
-        <Text>
-          <Text color="gray"> · </Text>Results for{" "}
-          <Text color="green">&quot;{searchValue}&quot;</Text>
-          {filter.length > 0 && (
-            <Text>
-              <Text color="gray"> · </Text>
-              <Text color="magenta">{filter.join(", ")} only</Text>
-            </Text>
-          )}
-          <Text color="gray"> · </Text>page <Text color="yellow">{currentPage}</Text>
-          <Text color="gray">{PAGE_STATE[nextPageStatus]}</Text>
+    <Box flexDirection="column">
+      <Text wrap="truncate-end">
+        <Text bold color="cyan">
+          libgen-dl v{version}
         </Text>
-      )}
-    </Text>
+        {newer && <Text color="yellow"> (v{newer} available)</Text>}
+        <Text color="gray"> · {mirror}</Text>
+      </Text>
+      <Text wrap="truncate-end">
+        {showResults && (
+          <Text>
+            Results for <Text color="green">&quot;{searchValue}&quot;</Text> ...
+            {filter.length > 0 && (
+              <Text>
+                <Text color="gray"> · </Text>
+                <Text color="magenta">{filter.join(", ")} only</Text>
+              </Text>
+            )}
+            <Text color="gray"> · </Text>page <Text color="yellow">{currentPage}</Text>
+            <Text color="gray">{PAGE_STATE[nextPageStatus]}</Text>
+          </Text>
+        )}
+        {!showResults && " "}
+      </Text>
+    </Box>
   );
 }

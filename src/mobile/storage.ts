@@ -50,6 +50,25 @@ export const setFolder = (folder: Folder | undefined) => {
   }
 };
 
+const LANGUAGE_KEY = "libgen-dl.language";
+
+// "" = no preference
+export const getLanguage = (): string => {
+  try {
+    return localStorage.getItem(LANGUAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+
+export const setLanguage = (language: string) => {
+  try {
+    localStorage.setItem(LANGUAGE_KEY, language);
+  } catch {
+    // storage unavailable: the choice just won't survive a restart
+  }
+};
+
 export const MIME: Record<string, string> = {
   epub: "application/epub+zip",
   pdf: "application/pdf",

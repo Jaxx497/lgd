@@ -8,5 +8,6 @@ export const defaultConfig = (): UserConfig => ({
   downloadDir: "",
   extensions: [],
   columns: DEFAULT_COLUMNS,
+  language: "",
   mirror: undefined,
 });

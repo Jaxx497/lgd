@@ -29,11 +29,13 @@ const downloadInCLI = (md5List: string[]) => {
 
 export const operate = async (flags: Record<string, unknown>) => {
   const { config, warnings } = loadUserConfig();
-  useBoundStore
-    .getState()
-    .setUserConfig(
-      applyFlags(config, { ext: flags.ext as string | undefined, output: flags.output as string })
-    );
+  useBoundStore.getState().setUserConfig(
+    applyFlags(config, {
+      ext: flags.ext as string | undefined,
+      language: flags.language as string | undefined,
+      output: flags.output as string,
+    })
+  );
   if (warnings.length > 0) {
     // console for -u (no UI), the warning line for everything else
     console.error(warnings.join("\n"));

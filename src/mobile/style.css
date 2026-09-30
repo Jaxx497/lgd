@@ -93,6 +93,58 @@ button.ghost[aria-pressed="true"] {
   /* the view it opens is showing: a solid outline, which e-ink shows (a tint wouldn't) */
   outline: 2px solid var(--accent);
 }
+button.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.count {
+  font-weight: 700;
+}
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.switch input {
+  /* a bordered pill with a solid knob: on/off is shape, not color, so e-ink can show it */
+  appearance: none;
+  flex: none;
+  width: 52px;
+  height: 30px;
+  padding: 0;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  position: relative;
+}
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.switch input:checked {
+  background: var(--accent);
+}
+.switch input:checked::after {
+  left: auto;
+  right: 3px;
+  background: var(--accent-text);
+}
+select {
+  font: inherit;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
 .toolbar {
   display: flex;
   justify-content: flex-end;

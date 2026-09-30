@@ -13,9 +13,9 @@ import { Help } from "./help";
 import { FilterPrompt } from "./filter-prompt";
 import { DOWNLOADS_PANEL_EXTRA_ROWS } from "../../components/downloads-panel";
 
-// Lines outside the table: header, table border (2), key hints, a blank line, and up to 3 status
+// Lines outside the table: header (2), table border (2), key hints, a blank line, and up to 3 status
 // lines (downloads, warning, quit prompt), plus one spare so Ink never fills the whole screen.
-const RESERVED_ROWS = 9;
+const RESERVED_ROWS = 10;
 // App margin (2) + table border (2) + table padding (2) + row pointer (2).
 const RESERVED_COLUMNS = 8;
 

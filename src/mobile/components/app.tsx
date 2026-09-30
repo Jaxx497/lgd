@@ -5,11 +5,8 @@ import Chips from "./chips";
 import Downloads from "./downloads";
 import Results from "./results";
 import Settings from "./settings";
-import { getTheme, setTheme, type Theme } from "../theme";
-
-const OTHER: Record<Theme, Theme> = { light: "dark", dark: "light" };
-// Words, not icons: on e-ink a gear and a sun look alike next to a moon.
-const LABEL: Record<Theme, string> = { light: "Dark", dark: "Light" };
+import { DOWNLOADS, SETTINGS, SVG } from "../icons";
+import { getLanguage } from "../storage";
 
 export default function App() {
   const s = useBoundStore();
@@ -20,18 +17,9 @@ export default function App() {
   if (showDownloads) {
     view = <Downloads />;
   }
-  let downloadsLabel = "Downloads";
-  if (running > 0) {
-    downloadsLabel += ` (${running})`;
-  }
-  const [theme, setThemeState] = useState<Theme>(getTheme());
-
-  // The button shows the theme you would switch to.
-  const toggleTheme = () => {
-    setTheme(OTHER[theme]);
-    setThemeState(OTHER[theme]);
-  };
   useEffect(() => {
+    const store = useBoundStore.getState();
+    useBoundStore.setState({ userConfig: { ...store.userConfig, language: getLanguage() } });
     void useBoundStore.getState().fetchConfig();
   }, []);
 
@@ -50,26 +38,21 @@ export default function App() {
           <button
             type="button"
             className="ghost"
+            aria-label="Downloads"
             aria-pressed={showDownloads}
             onClick={() => setShowDownloads(!showDownloads)}
           >
-            {downloadsLabel}
+            <svg {...SVG}>{DOWNLOADS}</svg>
+            {running > 0 && <span className="count">{running}</span>}
           </button>
           <button
             type="button"
             className="ghost"
-            aria-label={`Switch to ${OTHER[theme]} mode`}
-            onClick={toggleTheme}
-          >
-            {LABEL[theme]}
-          </button>
-          <button
-            type="button"
-            className="ghost"
+            aria-label="Settings"
             aria-pressed={showSettings}
             onClick={() => setShowSettings(!showSettings)}
           >
-            Settings
+            <svg {...SVG}>{SETTINGS}</svg>
           </button>
         </nav>
         <form onSubmit={submit}>
