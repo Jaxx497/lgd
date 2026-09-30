@@ -10,9 +10,9 @@ export const FAIL_REQ_ATTEMPT_DELAY_MS = 2000;
 export const REQUEST_TIMEOUT_MS = 10_000;
 
 export const SEARCH_PAGE_SIZE = 25;
-// With a filter, fetch bigger chunks (the mirror accepts 25/50/100), at most FETCH_CAP new
-// requests per page turn.
-export const FILTERED_CHUNK_SIZE = 100;
+// A search request takes as long for 25 rows as for 100 (the mirror accepts 25/50/100), so always
+// fetch 100: the next pages then come from the cache. At most FETCH_CAP new requests per page turn.
+export const FETCH_CHUNK_SIZE = 100;
 export const FETCH_CAP = 3;
 
 export const LIBGEN_USER_AGENT = `lgd/${version}`;

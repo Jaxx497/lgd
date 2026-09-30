@@ -127,7 +127,7 @@ const ResultList: FC = () => {
 
   let emptyMessage = "No results.";
   if (nextPageStatus === "partial") {
-    emptyMessage = "No matches yet. Press ] to keep looking, or f to change the filter.";
+    emptyMessage = "No matches yet. Press n to keep looking, or f to change the filter.";
   }
 
   const layout = layoutColumns(

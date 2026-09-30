@@ -11,19 +11,19 @@ The list of mirrors is still fetched from the original project's [configuration]
 Requires [Node.js](https://nodejs.org) 20+ and npm.
 
 ```
-git clone https://github.com/Jaxx497/libgen-downloader
-cd libgen-downloader
+git clone https://github.com/Jaxx497/lgd
+cd lgd
 npm install
 npm run build
 npm install -g .
 lgd
 ```
 
-Or download a standalone executable for your platform from the [Releases](https://github.com/Jaxx497/libgen-downloader/releases) page (no Node needed).
+Or download a standalone executable for your platform from the [Releases](https://github.com/Jaxx497/lgd/releases) page (no Node needed).
 
 ### Android
 
-Download the APK from the [Releases](https://github.com/Jaxx497/libgen-downloader/releases) page and open it on your phone (allow installing from your browser or file manager when asked).
+Download the APK from the [Releases](https://github.com/Jaxx497/lgd/releases) page and open it on your phone (allow installing from your browser or file manager when asked).
 
 Downloads are saved to the phone's Downloads folder; the ⚙ button picks a different one. **Open** launches a finished file in a reader app.
 
@@ -52,15 +52,15 @@ Results list:
 | `Ctrl-d` `Ctrl-u`, `PgDn` `PgUp` | half page / page |
 | `<n>` then `Enter` (or `<n>G`) | jump to row n |
 | `Enter` / `d` | download |
-| `i` / `l` / `→` | info |
-| `]` `[` (or `n` `p`) | next / previous page (on a short filtered page `]` looks further) |
+| `i` / `l` / `→` | details |
+| `n` `p` | next / previous page (on a short filtered page `n` looks further) |
 | `f` | filter by filetype (`pdf,epub`; empty for all) |
 | `t` | downloads panel |
 | `/` / `Esc` | new search (previous query pre-filled) |
 | `?` | help |
 | `q` / `Ctrl-c` | quit (asks first while downloads are running) |
 
-Info view:
+Details view:
 
 | Key | Action |
 |---|---|

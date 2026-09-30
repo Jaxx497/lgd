@@ -119,7 +119,7 @@ describe("search integration", () => {
     await useBoundStore.getState().handleSearchSubmit();
 
     const state = useBoundStore.getState();
-    expect(search).toHaveBeenCalledWith("typescript", 1, 25);
+    expect(search).toHaveBeenCalledWith("typescript", 1, 100);
     expect(state.activeLayout).toBe(LAYOUT_KEY.RESULT_LIST_LAYOUT);
     expect(state.entries).toEqual([entry]);
     expect(state.isLoading).toBe(false);
@@ -204,14 +204,20 @@ describe("paging with a filter", () => {
   });
 
   it("marks the last page when the mirror runs out", async () => {
-    installChunkedMirror(1, 1); // one full chunk of 25, then nothing
+    installChunkedMirror(1, 1); // one full chunk of 100, then nothing
     await useBoundStore.getState().showPage(1);
     expect(useBoundStore.getState().nextPageStatus).toBe("ready");
+
+    // pages 2-4 come from the one cached chunk
+    for (let page = 2; page <= 4; page++) {
+      await useBoundStore.getState().nextPage();
+    }
+    expect(useBoundStore.getState().currentPage).toBe(4);
 
     await useBoundStore.getState().nextPage();
 
     const state = useBoundStore.getState();
-    expect(state.currentPage).toBe(1);
+    expect(state.currentPage).toBe(4);
     expect(state.nextPageStatus).toBe("unavailable");
   });
 });

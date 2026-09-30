@@ -1,9 +1,18 @@
 import { Text } from "ink";
+import type { Hint } from "../layouts/hints";
 
-export function KeyHints({ hints }: { hints: string }) {
+export function KeyHints({ hints }: { hints: Hint[] }) {
   return (
-    <Text color="gray" wrap="truncate-end">
-      {hints}
+    <Text wrap="truncate-end">
+      {hints.map(([key, label], index) => (
+        <Text key={key}>
+          {index > 0 && "   "}
+          <Text color="cyanBright" bold>
+            {key}
+          </Text>
+          <Text color="gray"> {label}</Text>
+        </Text>
+      ))}
     </Text>
   );
 }

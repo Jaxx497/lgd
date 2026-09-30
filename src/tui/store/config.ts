@@ -64,11 +64,16 @@ export const createConfigStateSlice = (set: SetState, get: GetState) => ({
 
     // Find an available mirror
     store.setLoaderMessage(Label.FINDING_MIRROR);
-    const mirror = await findMirror(mirrors, (failedMirror: string) => {
-      store.setLoaderMessage(
-        `${Label.COULDNT_REACH_TO_MIRROR}, ${failedMirror}. ${Label.FINDING_MIRROR}`
-      );
-    });
+    // Mirrors are alternatives: one short try each, not the default five (a dead one would cost a minute).
+    const mirror = await findMirror(
+      mirrors,
+      (failedMirror: string) => {
+        store.setLoaderMessage(
+          `${Label.COULDNT_REACH_TO_MIRROR}, ${failedMirror}. ${Label.FINDING_MIRROR}`
+        );
+      },
+      { attemptCount: 1, timeoutMs: 5000 }
+    );
     store.setIsLoading(false);
 
     if (!mirror) {

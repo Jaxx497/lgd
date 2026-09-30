@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from "ink";
 import { useBoundStore } from "../store";
 import { SEARCH_MIN_CHAR } from "../../settings";
+import type { Hint } from "../layouts/hints";
 import { KeyHints } from "./key-hints";
 
 export function ErrorMessage() {
@@ -18,9 +19,12 @@ export function ErrorMessage() {
     }
   });
 
-  let hints = "q quit";
+  let hints: Hint[] = [["q", "quit"]];
   if (canRetry) {
-    hints = "r retry · q quit";
+    hints = [
+      ["r", "retry"],
+      ["q", "quit"],
+    ];
   }
 
   return (

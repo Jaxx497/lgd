@@ -2,7 +2,7 @@ import type { GetState, SetState } from "./index";
 import { LAYOUT_KEY } from "../layouts/keys";
 import Label from "../../labels";
 import { Entry } from "../../api/models/entry";
-import { FETCH_CAP, FILTERED_CHUNK_SIZE, SEARCH_MIN_CHAR, SEARCH_PAGE_SIZE } from "../../settings";
+import { FETCH_CAP, FETCH_CHUNK_SIZE, SEARCH_MIN_CHAR, SEARCH_PAGE_SIZE } from "../../settings";
 import { usableResults } from "../../api/filter";
 import type { NextPageStatus } from "./app";
 import { attempt } from "../../utilities";
@@ -77,13 +77,10 @@ export const createEventActionsSlice = (_set: SetState, get: GetState) => ({
 
   // Walks mirror chunks from the start (cached ones are free) collecting usable Entries that
   // match the filter, until `needed` are found, the mirror runs out, or FETCH_CAP new requests
-  // were made. With a filter, chunks are bigger so sparse matches need fewer requests.
+  // were made.
   collectResults: async (needed: number): Promise<CollectResult> => {
     const { searchValue, filter } = get();
-    let chunkSize = SEARCH_PAGE_SIZE;
-    if (filter.length > 0) {
-      chunkSize = FILTERED_CHUNK_SIZE;
-    }
+    const chunkSize = FETCH_CHUNK_SIZE;
 
     const results: Entry[] = [];
     const seen = new Set<string>(); // the same file can be listed in more than one chunk
@@ -145,7 +142,7 @@ export const createEventActionsSlice = (_set: SetState, get: GetState) => ({
         store.setNextPageStatus("unavailable");
         store.setWarningMessage("No more results");
       } else {
-        store.setWarningMessage("No more matches found yet, press ] to keep looking");
+        store.setWarningMessage("No more matches found yet, press n to keep looking");
       }
       return "success";
     }

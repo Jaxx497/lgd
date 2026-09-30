@@ -5,8 +5,8 @@ import type { NextPageStatus } from "../store/app";
 
 const PAGE_STATE: Record<NextPageStatus, string> = {
   idle: "",
-  ready: " · next ▸",
-  partial: " · ] find more",
+  ready: " · n next",
+  partial: " · n find more",
   unavailable: " · last page",
 };
 
@@ -33,9 +33,14 @@ export function AppHeader() {
         <Text>
           <Text color="gray"> · </Text>Results for{" "}
           <Text color="green">&quot;{searchValue}&quot;</Text>
+          {filter.length > 0 && (
+            <Text>
+              <Text color="gray"> · </Text>
+              <Text color="magenta">{filter.join(", ")} only</Text>
+            </Text>
+          )}
           <Text color="gray"> · </Text>page <Text color="yellow">{currentPage}</Text>
           <Text color="gray">{PAGE_STATE[nextPageStatus]}</Text>
-          {filter.length > 0 && <Text color="magenta"> · {filter.join(",")}</Text>}
         </Text>
       )}
     </Text>

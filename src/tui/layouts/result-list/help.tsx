@@ -1,18 +1,18 @@
 import { Box, Text } from "ink";
 
 const KEYS: [string, string][] = [
-  ["j k ↓ ↑", "move (a number first moves that many rows)"],
-  ["g G", "first / last row"],
-  ["ctrl-d ctrl-u", "half page down / up"],
-  ["pgdn pgup", "page down / up"],
-  ["<n> ⏎  or <n>G", "jump to row n"],
-  ["⏎ d", "download"],
-  ["i l →", "info"],
-  ["] n  [ p", "next / previous page (] also looks further on a short page)"],
+  ["↑ ↓  or  j k", "move (type a number first to move that many rows)"],
+  ["g  G", "first / last row"],
+  ["<row> ⏎", "jump to a row: type its number, then press enter"],
+  ["ctrl-d  ctrl-u", "half page down / up"],
+  ["pgdn  pgup", "page down / up"],
+  ["⏎  or  d", "download"],
+  ["i  or  →", "details"],
+  ["n  p", "next / previous page (n also looks further on a short page)"],
   ["f", "filter by filetype (pdf,epub; empty for all)"],
-  ["t", "downloads panel (j/k, x remove queued, r retry failed, c clear)"],
-  ["/ esc", "new search"],
-  ["q ctrl-c", "quit"],
+  ["t", "downloads panel"],
+  ["/  or  esc", "new search"],
+  ["q  or  ctrl-c", "quit"],
 ];
 
 export function Help() {
@@ -20,7 +20,7 @@ export function Help() {
     <Box flexDirection="column">
       {KEYS.map(([keys, action]) => (
         <Text key={keys} wrap="truncate-end">
-          <Text color="yellow">{keys.padEnd(16)}</Text>
+          <Text color="cyanBright">{keys.padEnd(16)}</Text>
           {action}
         </Text>
       ))}

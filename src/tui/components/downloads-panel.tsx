@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { useBoundStore } from "../store";
-import { DETAIL_HINTS, RESULT_LIST_HINTS } from "../layouts/hints";
+import { PANEL_HINTS } from "../layouts/hints";
 import { LAYOUT_KEY } from "../layouts/keys";
 import { KeyHints } from "./key-hints";
 import { DownloadStatus } from "../../download-statuses";
@@ -111,25 +111,17 @@ export function DownloadsPanel() {
     return (
       <Box marginTop={1}>
         <Text color="gray" wrap="truncate-end">
-          ▸ {summary} · t
+          ▸ {summary}
         </Text>
       </Box>
     );
-  }
-
-  let hints = RESULT_LIST_HINTS;
-  if (activeLayout === LAYOUT_KEY.DETAIL_LAYOUT) {
-    hints = DETAIL_HINTS;
   }
 
   return (
     <Box flexDirection="column">
       <Text wrap="truncate-end">
         <Text color="cyanBright">▾ {summary}</Text>
-        <Text color="gray">
-          {" "}
-          → {downloadDirectory} · j/k · x remove · r retry · c clear · t close
-        </Text>
+        <Text color="gray"> → {downloadDirectory}</Text>
       </Text>
       {downloads.slice(top, top + PANEL_ROWS).map((entry, index) => {
         const download = downloadProgressMap[entry.id];
@@ -158,7 +150,7 @@ export function DownloadsPanel() {
         );
       })}
       <Box marginTop={1}>
-        <KeyHints hints={hints} />
+        <KeyHints hints={PANEL_HINTS} />
       </Box>
     </Box>
   );

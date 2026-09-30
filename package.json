@@ -8,7 +8,7 @@
   "bin": {
     "lgd": "./build/index.js"
   },
-  "homepage": "https://github.com/Jaxx497/libgen-downloader",
+  "homepage": "https://github.com/Jaxx497/lgd",
   "scripts": {
     "start": "tsx src/index.ts",
     "test": "vitest run",
@@ -41,7 +41,7 @@
   "license": "WTFPL",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Jaxx497/libgen-downloader.git"
+    "url": "https://github.com/Jaxx497/lgd.git"
   },
   "devDependencies": {
     "@capacitor-community/file-opener": "^8.0.1",
