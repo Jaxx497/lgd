@@ -26,7 +26,7 @@ jobs:
           distribution: temurin
           java-version: 21
       # The runner image ships the SDK; Gradle fetches the platform it needs once licenses are accepted.
-      - run: yes | sdkmanager --licenses > /dev/null
+      - run: yes | "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager --licenses > /dev/null
       - run: bun install --frozen-lockfile
       - run: bun run web
       # The android/ project is generated, not committed.
