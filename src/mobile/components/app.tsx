@@ -8,7 +8,8 @@ import Settings from "./settings";
 import { getTheme, setTheme, type Theme } from "../theme";
 
 const OTHER: Record<Theme, Theme> = { light: "dark", dark: "light" };
-const ICON: Record<Theme, string> = { light: "☾", dark: "☀" };
+// Words, not icons: on e-ink a gear and a sun look alike next to a moon.
+const LABEL: Record<Theme, string> = { light: "Dark", dark: "Light" };
 
 export default function App() {
   const s = useBoundStore();
@@ -16,10 +17,12 @@ export default function App() {
   const [showDownloads, setShowDownloads] = useState(false);
   const running = s.inDownloadQueueEntryIds.length;
   let view = <Results />;
-  let downloadsClass = "ghost";
   if (showDownloads) {
     view = <Downloads />;
-    downloadsClass = "ghost on";
+  }
+  let downloadsLabel = "Downloads";
+  if (running > 0) {
+    downloadsLabel += ` (${running})`;
   }
   const [theme, setThemeState] = useState<Theme>(getTheme());
 
@@ -42,6 +45,33 @@ export default function App() {
   return (
     <>
       <header>
+        {/* its own row, so the search field gets the full width */}
+        <nav className="toolbar">
+          <button
+            type="button"
+            className="ghost"
+            aria-pressed={showDownloads}
+            onClick={() => setShowDownloads(!showDownloads)}
+          >
+            {downloadsLabel}
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            aria-label={`Switch to ${OTHER[theme]} mode`}
+            onClick={toggleTheme}
+          >
+            {LABEL[theme]}
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            aria-pressed={showSettings}
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            Settings
+          </button>
+        </nav>
         <form onSubmit={submit}>
           <input
             type="search"
@@ -51,31 +81,6 @@ export default function App() {
             onChange={(event) => s.setSearchValue(event.target.value)}
           />
           <button disabled={s.searchValue.length < SEARCH_MIN_CHAR || !s.mirrorAdapter}>Go</button>
-          <button
-            type="button"
-            className="ghost"
-            aria-label={`Switch to ${OTHER[theme]} mode`}
-            onClick={toggleTheme}
-          >
-            {ICON[theme]}
-          </button>
-          <button
-            type="button"
-            className={downloadsClass}
-            aria-label={`Downloads, ${running} running or queued`}
-            aria-pressed={showDownloads}
-            onClick={() => setShowDownloads(!showDownloads)}
-          >
-            ⤓{running > 0 && <sup>{running}</sup>}
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            aria-label="Settings"
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            ⚙
-          </button>
         </form>
         <Chips />
       </header>

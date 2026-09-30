@@ -89,9 +89,15 @@ button.ghost {
   color: var(--accent);
   padding: 8px 10px;
 }
-button.ghost.on {
-  /* the Downloads view is open: a solid outline, which e-ink shows (a tint wouldn't) */
+button.ghost[aria-pressed="true"] {
+  /* the view it opens is showing: a solid outline, which e-ink shows (a tint wouldn't) */
   outline: 2px solid var(--accent);
+}
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: -4px -10px 6px;
 }
 .chips {
   display: flex;
