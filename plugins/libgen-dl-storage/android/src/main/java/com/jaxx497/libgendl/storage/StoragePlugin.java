@@ -2,7 +2,6 @@ package com.jaxx497.libgendl.storage;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -222,12 +221,8 @@ public class StoragePlugin extends Plugin {
         status.put("total", total);
         notifyListeners("downloadProgress", status);
 
-        if (DownloadService.running) {
-            int percent = total > 0 ? (int) (bytes * 100 / total) : -1;
-            getContext()
-                .getSystemService(NotificationManager.class)
-                .notify(DownloadService.ID, DownloadService.build(getContext(), label, percent));
-        }
+        int percent = total > 0 ? (int) (bytes * 100 / total) : -1;
+        DownloadService.update(label, percent);
     }
 
     @PluginMethod

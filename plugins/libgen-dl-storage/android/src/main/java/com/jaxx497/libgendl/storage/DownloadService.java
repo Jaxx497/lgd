@@ -21,9 +21,9 @@ import androidx.core.app.NotificationCompat;
 public class DownloadService extends Service {
 
     static final int ID = 1;
-    // The download thread updates the notification only while this is true, so a late update can't
-    // leave an orphan notification behind after the service stops.
-    static volatile boolean running;
+    // The running service, for the download thread's progress updates. Null once stopped, so a late
+    // update can't bring the notification back.
+    private static volatile DownloadService instance;
     private static final String CHANNEL = "downloads";
 
     private PowerManager.WakeLock wake;
@@ -51,13 +51,8 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        running = true;
-        Notification notification = build(this, intent.getStringExtra("text"), intent.getIntExtra("percent", -1));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-        } else {
-            startForeground(ID, notification);
-        }
+        instance = this;
+        show(intent.getStringExtra("text"), intent.getIntExtra("percent", -1));
 
         if (wake == null) {
             wake = getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "libgen-dl:download");
@@ -69,9 +64,29 @@ public class DownloadService extends Service {
         return START_NOT_STICKY; // the transfer dies with the process; restarting the service wouldn't resume it
     }
 
+    // Progress goes through startForeground, not NotificationManager.notify: a notify() landing as the
+    // service stops can outlive it on older Android (seen on Android 9) as a stuck "ongoing" notification.
+    static void update(String text, int percent) {
+        DownloadService service = instance;
+        if (service != null) {
+            service.show(text, percent);
+        }
+    }
+
+    private void show(String text, int percent) {
+        Notification notification = build(this, text, percent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+        } else {
+            startForeground(ID, notification);
+        }
+    }
+
     @Override
     public void onDestroy() {
-        running = false;
+        instance = null;
+        stopForeground(true);
+        getSystemService(NotificationManager.class).cancel(ID);
         if (wake != null && wake.isHeld()) {
             wake.release();
         }
