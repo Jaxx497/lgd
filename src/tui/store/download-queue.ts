@@ -4,6 +4,7 @@ import { DownloadStatus } from "../../download-status";
 import { attempt } from "../../utilities";
 import { getDocument } from "../../api/data/document";
 import { saveFromUrl } from "../../api/data/download";
+import { DOWNLOAD_CONNECT_TIMEOUT_MS } from "../../settings";
 
 export interface IDownloadProgress {
   filename: string;
@@ -111,6 +112,11 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
 
       const controller = new AbortController();
       activeDownload = { id: entry.id, controller };
+      let timedOut = false;
+      const connectTimeout = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, DOWNLOAD_CONNECT_TIMEOUT_MS);
       try {
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.CONNECTING_TO_LIBGEN,
@@ -145,7 +151,10 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
           onStart: (filename, total) => {
             store.updateCurrentDownloadProgress(entry.id, { filename, progress: 0, total });
           },
-          onProgress: (bytes) => store.addDownloadProgress(entry.id, bytes),
+          onProgress: (bytes) => {
+            clearTimeout(connectTimeout);
+            store.addDownloadProgress(entry.id, bytes);
+          },
           signal: controller.signal,
         });
 
@@ -153,17 +162,22 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
           status: DownloadStatus.DOWNLOADED,
         });
       } catch (error) {
-        if (controller.signal.aborted) {
+        if (controller.signal.aborted && !timedOut) {
           // stopped by the user: back to a plain result, as if it was never queued
           forget(set, entry.id);
           continue;
         }
-        store.setWarningMessage((error as Error).message);
+        let message = (error as Error).message;
+        if (timedOut) {
+          message = `Nothing received within ${DOWNLOAD_CONNECT_TIMEOUT_MS / 1000} seconds`;
+        }
+        store.setWarningMessage(message);
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.FAILED,
-          error: (error as Error).message,
+          error: message,
         });
       } finally {
+        clearTimeout(connectTimeout);
         activeDownload = undefined;
         store.removeEntryIdFromDownloadQueue(entry.id);
       }

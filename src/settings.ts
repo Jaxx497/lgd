@@ -14,6 +14,10 @@ export const FALLBACK_MIRRORS = [
   "libgen.la",
 ].map((host) => ({ src: `https://${host}/`, type: "libgen-plus" as const }));
 
+// A download that has received nothing this long after it started (page lookup + connecting)
+// fails, freeing the queue. Once bytes flow, stalls are retried instead.
+export const DOWNLOAD_CONNECT_TIMEOUT_MS = 10_000;
+
 export const FAIL_REQ_ATTEMPT_COUNT = 5;
 export const FAIL_REQ_ATTEMPT_DELAY_MS = 2000;
 export const REQUEST_TIMEOUT_MS = 10_000;

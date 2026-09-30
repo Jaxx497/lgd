@@ -66,6 +66,19 @@ const installNetworkFixture = () => {
         );
       }
 
+      if (url.includes("/ads.php?md5=hang")) {
+        return new Response(
+          '<table id="main"><tr><td>Book</td><td><a href="/files/hang.epub">GET</a></td></tr></table>'
+        );
+      }
+
+      // never answers (until aborted)
+      if (url.endsWith("/files/hang.epub")) {
+        return new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+        });
+      }
+
       // sends a first chunk, then stalls until the request is aborted
       if (url.endsWith("/files/slow.epub")) {
         const body = new ReadableStream({
@@ -219,6 +232,37 @@ describe("stopping downloads", () => {
     expect(state.downloadProgressMap[next.id]?.status).toBe(DownloadStatus.DOWNLOADED);
     expect(state.inDownloadQueueEntryIds).toEqual([]);
     expect(state.setWarningMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe("connect timeout", () => {
+  it("fails a download that receives nothing within 10 seconds, and moves on", async () => {
+    vi.useFakeTimers();
+    installNetworkFixture();
+    installFilesystemFixture();
+    const hang = createEntry("hang", "hang");
+    const next = createEntry("next", "success");
+    useBoundStore.setState({
+      downloadQueue: [hang, next],
+      inDownloadQueueEntryIds: [hang.id, next.id],
+      downloads: [hang, next],
+    });
+
+    const queue = useBoundStore.getState().iterateQueue();
+    await vi.advanceTimersByTimeAsync(9000);
+    expect(useBoundStore.getState().downloadProgressMap[hang.id]?.status).toBe(
+      DownloadStatus.DOWNLOADING
+    );
+    await vi.advanceTimersByTimeAsync(1000);
+    vi.useRealTimers();
+    await queue;
+
+    const state = useBoundStore.getState();
+    expect(state.downloadProgressMap[hang.id]).toMatchObject({
+      status: DownloadStatus.FAILED,
+      error: "Nothing received within 10 seconds",
+    });
+    expect(state.downloadProgressMap[next.id]?.status).toBe(DownloadStatus.DOWNLOADED);
   });
 });
 
