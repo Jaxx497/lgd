@@ -3,6 +3,9 @@ import { registerPlugin } from "@capacitor/core";
 // Native side: plugins/lgd-storage.
 interface StoragePlugin {
   pickFolder(): Promise<Folder>;
+  startKeepAlive(options: { text: string; percent: number }): Promise<void>;
+  updateKeepAlive(options: { text: string; percent: number }): Promise<void>;
+  stopKeepAlive(): Promise<void>;
   publish(options: {
     path: string;
     name: string;

@@ -1,15 +1,20 @@
 package com.jaxx497.lgd.storage;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import androidx.activity.result.ActivityResult;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -31,6 +36,43 @@ public class StoragePlugin extends Plugin {
 
     private static final int GRANT =
         Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+
+    // Foreground service while downloads run (see DownloadService). The app must be on screen when
+    // this is called, which it is: it follows the tap that queues a download.
+    @PluginMethod
+    public void startKeepAlive(PluginCall call) {
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(getContext(), Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            // ponytail: fire and forget. Denied just hides the notification; the service still keeps the app alive.
+            ActivityCompat.requestPermissions(getActivity(), new String[] { Manifest.permission.POST_NOTIFICATIONS }, 0);
+        }
+        Intent intent = new Intent(getContext(), DownloadService.class);
+        intent.putExtra("text", call.getString("text", "Downloading"));
+        intent.putExtra("percent", call.getInt("percent", -1));
+        ContextCompat.startForegroundService(getContext(), intent);
+        call.resolve();
+    }
+
+    // Straight to the notification manager: starting the service again from the background is restricted.
+    @PluginMethod
+    public void updateKeepAlive(PluginCall call) {
+        getContext()
+            .getSystemService(NotificationManager.class)
+            .notify(
+                DownloadService.ID,
+                DownloadService.build(getContext(), call.getString("text", "Downloading"), call.getInt("percent", -1))
+            );
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void stopKeepAlive(PluginCall call) {
+        getContext().stopService(new Intent(getContext(), DownloadService.class));
+        call.resolve();
+    }
 
     @PluginMethod
     public void pickFolder(PluginCall call) {
