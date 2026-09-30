@@ -13,7 +13,7 @@ export default function Downloads() {
   return (
     <>
       <div className="pager">
-        <span>Downloads</span>
+        <span>{downloads.length} this session</span>
         {downloads.length > running && (
           <button className="ghost" onClick={clear}>
             Clear finished

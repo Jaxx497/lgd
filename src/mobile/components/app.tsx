@@ -8,14 +8,36 @@ import Settings from "./settings";
 import { DOWNLOADS, SETTINGS, SVG } from "../icons";
 import { getLanguage } from "../storage";
 
+type Page = "results" | "downloads" | "settings";
+
 export default function App() {
   const s = useBoundStore();
-  const [showSettings, setShowSettings] = useState(false);
-  const [showDownloads, setShowDownloads] = useState(false);
+  // One page at a time; the toolbar icon of the open page takes you back to the results.
+  const [page, setPage] = useState<Page>("results");
+  const toggle = (next: Page) => {
+    if (page === next) {
+      setPage("results");
+      return;
+    }
+    setPage(next);
+  };
   const running = s.inDownloadQueueEntryIds.length;
   let view = <Results />;
-  if (showDownloads) {
-    view = <Downloads />;
+  if (page === "downloads") {
+    view = (
+      <>
+        <h1 className="page-title">Downloads</h1>
+        <Downloads />
+      </>
+    );
+  }
+  if (page === "settings") {
+    view = (
+      <>
+        <h1 className="page-title">Settings</h1>
+        <Settings />
+      </>
+    );
   }
   useEffect(() => {
     const store = useBoundStore.getState();
@@ -26,7 +48,7 @@ export default function App() {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     (document.activeElement as HTMLElement | null)?.blur();
-    setShowDownloads(false);
+    setPage("results");
     void s.handleSearchSubmit();
   };
 
@@ -41,8 +63,8 @@ export default function App() {
               type="button"
               className="ghost"
               aria-label="Downloads"
-              aria-pressed={showDownloads}
-              onClick={() => setShowDownloads(!showDownloads)}
+              aria-pressed={page === "downloads"}
+              onClick={() => toggle("downloads")}
             >
               <svg {...SVG}>{DOWNLOADS}</svg>
               {running > 0 && <span className="count">{running}</span>}
@@ -51,29 +73,32 @@ export default function App() {
               type="button"
               className="ghost"
               aria-label="Settings"
-              aria-pressed={showSettings}
-              onClick={() => setShowSettings(!showSettings)}
+              aria-pressed={page === "settings"}
+              onClick={() => toggle("settings")}
             >
               <svg {...SVG}>{SETTINGS}</svg>
             </button>
           </div>
         </nav>
-        <form onSubmit={submit}>
-          <input
-            type="search"
-            enterKeyHint="search"
-            placeholder="Search LibGen"
-            value={s.searchValue}
-            onChange={(event) => s.setSearchValue(event.target.value)}
-          />
-          <button disabled={s.searchValue.length < SEARCH_MIN_CHAR || !s.mirrorAdapter}>Go</button>
-        </form>
-        <Chips />
+        {page === "results" && (
+          <>
+            <form onSubmit={submit}>
+              <input
+                type="search"
+                enterKeyHint="search"
+                placeholder="Search LibGen"
+                value={s.searchValue}
+                onChange={(event) => s.setSearchValue(event.target.value)}
+              />
+              <button disabled={s.searchValue.length < SEARCH_MIN_CHAR || !s.mirrorAdapter}>
+                Go
+              </button>
+            </form>
+            <Chips />
+          </>
+        )}
       </header>
-      <main>
-        {showSettings && <Settings />}
-        {view}
-      </main>
+      <main>{view}</main>
       {s.warningMessage && <div className="toast">{s.warningMessage}</div>}
     </>
   );

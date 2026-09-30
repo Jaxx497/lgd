@@ -41,14 +41,14 @@ body {
     "Segoe UI",
     Roboto,
     sans-serif;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 header {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 10px 16px 6px;
+  /* the status-bar inset lives here, not on body: a sticky header would otherwise slide under it */
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 6px;
   background: var(--bg);
 }
 form {
@@ -158,6 +158,12 @@ input[role="switch"]:checked::after {
 /* the open view gets an underline bar: no outline, and e-ink still shows it */
 .toolbar button[aria-pressed="true"] {
   box-shadow: inset 0 -3px 0 var(--accent);
+}
+.page-title {
+  margin: 4px 2px 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 .panel {
   background: var(--card);
