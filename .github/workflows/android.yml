@@ -34,12 +34,28 @@ jobs:
       - run: npx cap add android && npx cap sync android
       # Our icons and splash replace Capacitor's defaults (made by scripts/make-icons.py).
       - run: cp -r resources/android-res/. android/app/src/main/res/
-      - run: ./gradlew assembleDebug
+      # Every build is signed with the one release key, so each installs over the last.
+      # The keystore is kept outside the repo; see "Signing" in the README.
+      - name: Build signed APK
         working-directory: android
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "::error::ANDROID_KEYSTORE secret is missing (see Signing in the README)"
+            exit 1
+          fi
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.jks" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias=libgen-dl \
+            -Pandroid.injected.signing.key.password="$KEYSTORE_PASSWORD"
       # The storage plugin's manifest must have merged in (Android 9 and older publish to Downloads with it).
       - run: grep -rl WRITE_EXTERNAL_STORAGE android/app/build/intermediates/merged_manifests
-      - run: cp android/app/build/outputs/apk/debug/app-debug.apk LibgenDL.apk
-      # ponytail: debug-signed (installs fine, just not Play Store material)
+      # Unsigned output would be app-release-unsigned.apk, so this also fails if signing didn't happen.
+      - run: cp android/app/build/outputs/apk/release/app-release.apk LibgenDL.apk
       - uses: actions/upload-artifact@v4
         with:
           name: LibgenDL.apk

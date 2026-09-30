@@ -15,3 +15,5 @@ CONTEXT.md
 ws.session
 www
 /android
+# the Android signing key lives outside the repo
+*.jks

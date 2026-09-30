@@ -83,6 +83,7 @@ jobs:
     uses: ./.github/workflows/android.yml
     with:
       ref: ${{ inputs.publish && inputs.tag || '' }}
+    secrets: inherit # the signing key
 
   release:
     if: inputs.publish

@@ -56,16 +56,28 @@ export async function saveFromUrl(arguments_: {
     arguments_.onProgress(bytes - seen);
     seen = bytes;
   });
+  if (arguments_.signal.aborted) {
+    await listener.remove();
+    throw new Error("Stopped"); // stopped while the file name was being picked
+  }
   const stop = () => void Storage.stopDownload().catch(() => {});
   arguments_.signal.addEventListener("abort", stop);
   try {
-    // the native side deletes its partial file on failure
-    await Storage.download({
-      url: arguments_.url,
-      path: uri,
-      label: filename,
-      userAgent: LIBGEN_USER_AGENT,
-    });
+    // The native side deletes its partial file on failure. Raced against the stop: a download
+    // still connecting can take a while to notice it.
+    await Promise.race([
+      Storage.download({
+        url: arguments_.url,
+        path: uri,
+        label: filename,
+        userAgent: LIBGEN_USER_AGENT,
+      }),
+      new Promise<never>((_resolve, reject) =>
+        arguments_.signal.addEventListener("abort", () => reject(new Error("Stopped")), {
+          once: true,
+        })
+      ),
+    ]);
   } finally {
     arguments_.signal.removeEventListener("abort", stop);
     await listener.remove();

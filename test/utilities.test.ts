@@ -2,6 +2,23 @@ import { describe, expect, it } from "vitest";
 import { attempt } from "../src/utilities";
 
 describe("attempt", () => {
+  it("gives up at once when stopped, even if the request ignores its signal", async () => {
+    const stop = new AbortController();
+    let calls = 0;
+    const result = attempt(
+      () => {
+        calls++;
+        return new Promise<string>(() => {}); // like the Android build's native HTTP: never aborts
+      },
+      { attemptCount: 5, delayMs: 60_000, timeoutMs: 60_000, signal: stop.signal }
+    );
+
+    stop.abort();
+
+    expect(await result).toBeUndefined();
+    expect(calls).toBe(1);
+  });
+
   it("aborts timed-out work and retries with a fresh signal", async () => {
     const signals: AbortSignal[] = [];
 

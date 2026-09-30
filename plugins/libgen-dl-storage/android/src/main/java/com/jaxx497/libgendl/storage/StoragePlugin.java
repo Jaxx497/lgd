@@ -72,9 +72,25 @@ public class StoragePlugin extends Plugin {
 
     private static final int ATTEMPTS = 5;
 
-    // One download at a time (the queue is serial): these belong to the running one.
-    private volatile boolean stopped;
-    private volatile HttpURLConnection connection;
+    // One download's state. A stopped one may still be blocked in a connect for a while; its own
+    // flag keeps it from touching the next download once the queue has moved on.
+    private static final class Job {
+        final String url;
+        final File file;
+        final String label;
+        final String agent;
+        volatile boolean stopped;
+        volatile HttpURLConnection connection;
+
+        Job(PluginCall call) {
+            url = call.getString("url");
+            file = new File(Uri.parse(call.getString("path")).getPath());
+            label = call.getString("label", "Downloading");
+            agent = call.getString("userAgent");
+        }
+    }
+
+    private volatile Job job; // the running one (the queue is serial)
 
     @PluginMethod
     public void download(PluginCall call) {
@@ -93,49 +109,50 @@ public class StoragePlugin extends Plugin {
         startDownload(call);
     }
 
+    // Resolves at once; the download's own call rejects with "Stopped".
     @PluginMethod
     public void stopDownload(PluginCall call) {
-        stopped = true;
-        HttpURLConnection http = connection;
-        if (http != null) {
-            http.disconnect(); // unblocks a read waiting on the network
+        Job stopping = job;
+        if (stopping != null) {
+            stopping.stopped = true;
+            HttpURLConnection http = stopping.connection;
+            if (http != null) {
+                new Thread(http::disconnect).start(); // unblocks a read waiting on the network
+            }
         }
         call.resolve();
     }
 
     private void startDownload(PluginCall call) {
-        String url = call.getString("url");
-        File file = new File(Uri.parse(call.getString("path")).getPath());
-        String label = call.getString("label", "Downloading");
-        String agent = call.getString("userAgent");
-        stopped = false;
+        Job current = new Job(call);
+        job = current;
 
         // Its own thread: the plugin thread is shared by every plugin call, stopDownload included.
         new Thread(() -> {
             try {
-                fetch(url, file, label, agent);
+                fetch(current);
                 call.resolve();
             } catch (Exception exception) {
-                file.delete();
-                call.reject(stopped ? "Stopped" : String.valueOf(exception.getMessage()));
+                current.file.delete();
+                call.reject(current.stopped ? "Stopped" : String.valueOf(exception.getMessage()));
             }
         }).start();
     }
 
     // A dropped or stalled connection is retried, resuming where it stopped when the server honors
     // Range requests (and starting over when it doesn't).
-    private void fetch(String url, File file, String label, String agent) throws IOException, InterruptedException {
-        file.delete();
+    private void fetch(Job current) throws IOException, InterruptedException {
+        current.file.delete();
         IOException last = null;
         for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
             if (attempt > 0) {
                 Thread.sleep(3000);
             }
-            if (stopped) {
+            if (current.stopped) {
                 throw new IOException("Stopped");
             }
             try {
-                transfer(url, file, label, agent);
+                transfer(current);
                 return;
             } catch (IOException exception) {
                 last = exception;
@@ -144,9 +161,9 @@ public class StoragePlugin extends Plugin {
         throw last;
     }
 
-    private void transfer(String url, File file, String label, String agent) throws IOException {
-        long offset = file.length();
-        HttpURLConnection http = open(url, offset, agent);
+    private void transfer(Job current) throws IOException {
+        long offset = current.file.length();
+        HttpURLConnection http = open(current, offset);
         try {
             int code = http.getResponseCode();
             if (code != HttpURLConnection.HTTP_OK && code != HttpURLConnection.HTTP_PARTIAL) {
@@ -159,13 +176,13 @@ public class StoragePlugin extends Plugin {
             long length = http.getContentLengthLong();
             long total = length < 0 ? -1 : offset + length;
 
-            try (InputStream in = http.getInputStream(); OutputStream out = new FileOutputStream(file, resumed)) {
+            try (InputStream in = http.getInputStream(); OutputStream out = new FileOutputStream(current.file, resumed)) {
                 byte[] buffer = new byte[64 * 1024];
                 long bytes = offset;
                 long reported = 0;
                 int read;
                 while ((read = in.read(buffer)) != -1) {
-                    if (stopped) {
+                    if (current.stopped) {
                         throw new IOException("Stopped");
                     }
                     out.write(buffer, 0, read);
@@ -173,31 +190,33 @@ public class StoragePlugin extends Plugin {
                     long now = SystemClock.elapsedRealtime();
                     if (now - reported >= 500) {
                         reported = now;
-                        report(bytes, total, label);
+                        report(current, bytes, total);
                     }
                 }
-                report(bytes, total, label);
+                report(current, bytes, total);
                 if (total >= 0 && bytes < total) {
                     throw new IOException("Connection closed early");
                 }
             }
         } finally {
             http.disconnect();
-            connection = null;
         }
     }
 
     // Follows redirects by hand: HttpURLConnection won't follow one that switches http <-> https.
-    private HttpURLConnection open(String url, long offset, String agent) throws IOException {
-        URL target = new URL(url);
+    private HttpURLConnection open(Job current, long offset) throws IOException {
+        URL target = new URL(current.url);
         for (int hop = 0; hop < 5; hop++) {
+            if (current.stopped) {
+                throw new IOException("Stopped");
+            }
             HttpURLConnection http = (HttpURLConnection) target.openConnection();
-            connection = http;
+            current.connection = http;
             http.setInstanceFollowRedirects(false);
             http.setConnectTimeout(30_000);
             http.setReadTimeout(60_000);
-            if (agent != null) {
-                http.setRequestProperty("User-Agent", agent);
+            if (current.agent != null) {
+                http.setRequestProperty("User-Agent", current.agent);
             }
             if (offset > 0) {
                 http.setRequestProperty("Range", "bytes=" + offset + "-");
@@ -213,16 +232,19 @@ public class StoragePlugin extends Plugin {
         throw new IOException("Too many redirects");
     }
 
-    // To the page (throttled with the app in the background, so it can lag) and straight to the
-    // notification, which doesn't depend on the page.
-    private void report(long bytes, long total, String label) {
+    // To the page (throttled with the app in the background, so it can lag) and to the notification,
+    // which doesn't depend on the page. A stopped download reports nothing.
+    private void report(Job current, long bytes, long total) {
+        if (current.stopped) {
+            return;
+        }
         JSObject status = new JSObject();
         status.put("bytes", bytes);
         status.put("total", total);
         notifyListeners("downloadProgress", status);
 
         int percent = total > 0 ? (int) (bytes * 100 / total) : -1;
-        DownloadService.update(label, percent);
+        DownloadService.update(current.label, percent);
     }
 
     @PluginMethod

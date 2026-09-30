@@ -8,6 +8,16 @@ export function delay(ms: number): Promise<void> {
   });
 }
 
+// Settles once the signal aborts; never without one.
+function whenAborted(signal: AbortSignal | undefined): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) {
+      resolve();
+    }
+    signal?.addEventListener("abort", () => resolve(), { once: true });
+  });
+}
+
 export interface AttemptOptions {
   attemptCount?: number;
   delayMs?: number;
@@ -34,15 +44,22 @@ export async function attempt<T>(
     options.signal?.addEventListener("abort", () => controller.abort(), { once: true });
 
     try {
-      return await callback(controller.signal);
+      // Raced against the stop signal: not every request honors its signal (the Android build's
+      // native HTTP ignores it), and a stop must not wait for one to finish on its own.
+      return await Promise.race([
+        callback(controller.signal),
+        whenAborted(options.signal).then(() => {
+          throw new Error("Stopped");
+        }),
+      ]);
     } catch {
       // retried below
     } finally {
       clearTimeout(timeout);
     }
 
-    if (index + 1 < attemptCount && !options.signal?.aborted) {
-      await delay(delayMs);
+    if (index + 1 < attemptCount) {
+      await Promise.race([delay(delayMs), whenAborted(options.signal)]);
     }
   }
 

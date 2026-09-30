@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { SEARCH_MIN_CHAR } from "../../settings";
 import { useBoundStore } from "../../tui/store";
 import Chips from "./chips";
+import Downloads from "./downloads";
 import Results from "./results";
 import Settings from "./settings";
 import { getTheme, setTheme, type Theme } from "../theme";
@@ -12,6 +13,14 @@ const ICON: Record<Theme, string> = { light: "☾", dark: "☀" };
 export default function App() {
   const s = useBoundStore();
   const [showSettings, setShowSettings] = useState(false);
+  const [showDownloads, setShowDownloads] = useState(false);
+  const running = s.inDownloadQueueEntryIds.length;
+  let view = <Results />;
+  let downloadsClass = "ghost";
+  if (showDownloads) {
+    view = <Downloads />;
+    downloadsClass = "ghost on";
+  }
   const [theme, setThemeState] = useState<Theme>(getTheme());
 
   // The button shows the theme you would switch to.
@@ -26,6 +35,7 @@ export default function App() {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     (document.activeElement as HTMLElement | null)?.blur();
+    setShowDownloads(false);
     void s.handleSearchSubmit();
   };
 
@@ -51,6 +61,15 @@ export default function App() {
           </button>
           <button
             type="button"
+            className={downloadsClass}
+            aria-label={`Downloads, ${running} running or queued`}
+            aria-pressed={showDownloads}
+            onClick={() => setShowDownloads(!showDownloads)}
+          >
+            ⤓{running > 0 && <sup>{running}</sup>}
+          </button>
+          <button
+            type="button"
             className="ghost"
             aria-label="Settings"
             onClick={() => setShowSettings(!showSettings)}
@@ -62,7 +81,7 @@ export default function App() {
       </header>
       <main>
         {showSettings && <Settings />}
-        <Results />
+        {view}
       </main>
       {s.warningMessage && <div className="toast">{s.warningMessage}</div>}
     </>

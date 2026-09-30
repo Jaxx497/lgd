@@ -25,7 +25,7 @@ Or download a standalone executable for your platform from the [Releases](https:
 
 Download the APK from the [Releases](https://github.com/Jaxx497/libgen-dl/releases) page and open it on your phone (allow installing from your browser or file manager when asked).
 
-Downloads are saved to the phone's Downloads folder; the ⚙ button picks a different one. **Open** launches a finished file in a reader app.
+Downloads are saved to the phone's Downloads folder; the ⚙ button picks a different one. **Open** launches a finished file in a reader app. The ⤓ button lists this session's downloads, with **Stop** for running and queued ones.
 
 ## Usage
 
@@ -101,3 +101,7 @@ Existing files are never overwritten: a second copy is saved as `name(1).ext`.
 ```
 
 Command-line flags override the file.
+
+## Signing (maintainers)
+
+The APK is signed with one release key so every version installs over the last. The keystore and its password live outside the repo, as the `ANDROID_KEYSTORE` (base64) and `ANDROID_KEYSTORE_PASSWORD` repository secrets; the key alias is `libgen-dl`. Losing the keystore means no future APK can install over an existing one, so keep a backup.

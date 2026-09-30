@@ -89,6 +89,10 @@ button.ghost {
   color: var(--accent);
   padding: 8px 10px;
 }
+button.ghost.on {
+  /* the Downloads view is open: a solid outline, which e-ink shows (a tint wouldn't) */
+  outline: 2px solid var(--accent);
+}
 .chips {
   display: flex;
   gap: 6px;
