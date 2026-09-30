@@ -110,4 +110,4 @@ jobs:
             **Terminal:** download the executable for your platform and make it executable
             (`chmod +x lgd-*`), or install with npm (see the README).
 
-            **Android:** download `lgd-android.apk` and open it on your phone.
+            **Android:** download `LibgenDL.apk` and open it on your phone.
