@@ -34,18 +34,12 @@ jobs:
           - os: ubuntu-24.04-arm
             target: bun-linux-arm64
             artifact: libgen-dl-linux-arm64
-          - os: macos-15-intel
-            target: bun-darwin-x64
-            artifact: libgen-dl-macos-x64
           - os: macos-latest
             target: bun-darwin-arm64
             artifact: libgen-dl-macos-arm64
           - os: windows-latest
             target: bun-windows-x64
             artifact: libgen-dl-windows-x64.exe
-          - os: windows-11-arm
-            target: bun-windows-arm64
-            artifact: libgen-dl-windows-arm64.exe
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -108,7 +102,7 @@ jobs:
           body: |
             ## libgen-dl ${{ inputs.tag }}
 
-            **Terminal:** download the executable for your platform and make it executable
-            (`chmod +x libgen-dl-*`), or install with npm (see the README).
+            **Terminal:** run the install script from the README, or download the executable for
+            your platform and make it executable (`chmod +x libgen-dl-*`).
 
             **Android:** download `LibgenDL.apk` and open it on your phone.
