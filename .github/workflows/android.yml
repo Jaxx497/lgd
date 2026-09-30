@@ -32,6 +32,8 @@ jobs:
       - run: npm run web
       # The android/ project is generated, not committed.
       - run: npx cap add android && npx cap sync android
+      # Our icons and splash replace Capacitor's defaults (made by scripts/make-icons.py).
+      - run: cp -r resources/android-res/. android/app/src/main/res/
       - run: ./gradlew assembleDebug
         working-directory: android
       - run: cp android/app/build/outputs/apk/debug/app-debug.apk lgd-android.apk

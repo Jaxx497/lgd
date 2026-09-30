@@ -35,3 +35,4 @@ tsconfig.json
 /scripts
 capacitor.config.ts
 /www
+/resources
