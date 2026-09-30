@@ -18,6 +18,8 @@ import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -66,12 +68,6 @@ public class StoragePlugin extends Plugin {
         String mime = call.getString("mime", "application/octet-stream");
         String tree = call.getString("tree");
 
-        // ponytail: below Android 10 there's no MediaStore.Downloads; a picked folder still works
-        if (tree == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            call.reject("Choose a download folder in settings (Android 9 and older)");
-            return;
-        }
-
         getBridge().execute(() -> {
             try {
                 File source = new File(Uri.parse(path).getPath());
@@ -85,6 +81,27 @@ public class StoragePlugin extends Plugin {
                         DocumentsContract.getTreeDocumentId(treeUri)
                     );
                     destination = DocumentsContract.createDocument(resolver, parent, mime, name);
+                } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    // Android 9 and older have no MediaStore.Downloads: write straight into the
+                    // public folder (WRITE_EXTERNAL_STORAGE was granted before the download).
+                    File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    dir.mkdirs();
+                    int dot = name.lastIndexOf('.');
+                    String base = dot > 0 ? name.substring(0, dot) : name;
+                    String extension = dot > 0 ? name.substring(dot) : "";
+                    File target = new File(dir, name);
+                    for (int copy = 1; target.exists(); copy++) {
+                        target = new File(dir, base + " (" + copy + ")" + extension);
+                    }
+                    try (InputStream in = new FileInputStream(source); OutputStream out = new FileOutputStream(target)) {
+                        pipe(in, out);
+                    }
+                    source.delete();
+
+                    JSObject legacy = new JSObject();
+                    legacy.put("uri", Uri.fromFile(target).toString());
+                    call.resolve(legacy);
+                    return;
                 } else {
                     ContentValues values = new ContentValues();
                     values.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
@@ -93,18 +110,14 @@ public class StoragePlugin extends Plugin {
                     destination = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
                 }
                 if (destination == null) {
-                    throw new java.io.IOException("Couldn't create the file");
+                    throw new IOException("Couldn't create the file");
                 }
 
                 try (
                     InputStream in = new FileInputStream(source);
                     OutputStream out = resolver.openOutputStream(destination)
                 ) {
-                    byte[] buffer = new byte[64 * 1024];
-                    int read;
-                    while ((read = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, read);
-                    }
+                    pipe(in, out);
                 }
                 source.delete();
 
@@ -115,5 +128,13 @@ public class StoragePlugin extends Plugin {
                 call.reject(exception.getMessage(), exception);
             }
         });
+    }
+
+    private static void pipe(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[64 * 1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
     }
 }
