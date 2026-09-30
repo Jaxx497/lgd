@@ -49,8 +49,14 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Bun is used only here, to compile the standalone executables.
       - name: Install dependencies
-        run: bun install
+        run: npm ci
 
       - name: Compile executable
         run: bun build src/index.ts --compile --outfile ${{ matrix.artifact }}

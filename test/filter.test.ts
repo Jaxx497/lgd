@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import type { Entry } from "../src/api/models/entry";
 import { usableResults } from "../src/api/filter";
 

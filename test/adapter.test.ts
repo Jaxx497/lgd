@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { parseHTML } from "linkedom";
 import { LibgenPlusAdapter } from "../src/api/adapters/libgen-plus-adapter";
 

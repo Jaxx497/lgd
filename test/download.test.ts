@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -30,14 +30,14 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  mock.restore();
+  vi.restoreAllMocks();
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
 describe("downloadFile", () => {
   it("writes every response chunk and reports progress", async () => {
-    const onStart = mock(() => {});
-    const onData = mock(() => {});
+    const onStart = vi.fn(() => {});
+    const onData = vi.fn(() => {});
     const chunks = [Buffer.from("first "), Buffer.from("second")];
 
     const result = await downloadFile({
@@ -76,7 +76,7 @@ describe("downloadFile", () => {
         callback();
       },
     });
-    spyOn(fs, "createWriteStream").mockReturnValue(destination as fs.WriteStream);
+    vi.spyOn(fs, "createWriteStream").mockReturnValue(destination as fs.WriteStream);
 
     let cancelled = false;
     let pullCount = 0;
@@ -173,11 +173,14 @@ describe("reserveUniquePath", () => {
 
 describe("removePartialDownloads", () => {
   it("deletes files that are still being written", async () => {
-    const gate = Promise.withResolvers<void>();
+    let open!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      open = resolve;
+    });
     const body = new ReadableStream<Uint8Array>({
       async pull(controller) {
         controller.enqueue(Buffer.from("partial"));
-        await gate.promise;
+        await gate;
         controller.close();
       },
     });
@@ -196,7 +199,7 @@ describe("removePartialDownloads", () => {
     removePartialDownloads();
     expect(fs.existsSync(path.join(directory, "slow.epub"))).toBe(false);
 
-    gate.resolve();
+    open();
     await pending.catch(() => {});
   });
 });

@@ -34,3 +34,4 @@ tsconfig.json
 /plugins
 /scripts
 capacitor.config.ts
+/www

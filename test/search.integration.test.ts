@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LibgenPlusAdapter } from "../src/api/adapters/libgen-plus-adapter";
 import type { Entry } from "../src/api/models/entry";
 import Label from "../src/labels";
@@ -57,20 +57,22 @@ beforeEach(() => {
       mirror: { src: BASE_URL, type: "libgen-plus" },
       mirrors: [{ src: BASE_URL, type: "libgen-plus" }],
       mirrorAdapter: new LibgenPlusAdapter(BASE_URL),
-      setWarningMessage: mock(() => {}),
+      setWarningMessage: vi.fn(() => {}),
     },
     true
   );
 });
 
 afterEach(() => {
-  mock.restore();
+  vi.restoreAllMocks();
   useBoundStore.setState(originalStoreState, true);
 });
 
 describe("search integration", () => {
   it("parses remote results, caches them, and reuses the cache", async () => {
-    const fetchMock = spyOn(globalThis, "fetch").mockResolvedValue(new Response(searchResultHTML));
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(searchResultHTML));
     useBoundStore.setState({ searchValue: "typescript" });
 
     const firstResult = await useBoundStore.getState().search("typescript", 1, 25);
@@ -99,7 +101,7 @@ describe("search integration", () => {
   });
 
   it("returns a connection error reported by the active mirror", async () => {
-    spyOn(globalThis, "fetch").mockResolvedValue(
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response('<div class="alert-danger">Database is unavailable</div>')
     );
     useBoundStore.setState({ searchValue: "typescript" });
@@ -111,7 +113,7 @@ describe("search integration", () => {
   });
 
   it("submits a search and shows the first page", async () => {
-    const search = mock(async () => ({ status: "success" as const, entries: [entry] }));
+    const search = vi.fn(async () => ({ status: "success" as const, entries: [entry] }));
     useBoundStore.setState({ searchValue: "typescript", search });
 
     await useBoundStore.getState().handleSearchSubmit();
@@ -126,7 +128,7 @@ describe("search integration", () => {
   });
 
   it("reports an unrecoverable connection error when no fallback mirror exists", async () => {
-    const search = mock(async () => ({
+    const search = vi.fn(async () => ({
       status: "connection_error" as const,
       message: "Active mirror failed",
     }));
@@ -143,7 +145,7 @@ describe("search integration", () => {
 
 // A mirror whose every chunk is full: `pdfEvery` rows in each chunk are pdf, the rest cbr.
 const installChunkedMirror = (pdfEvery: number, lastChunk = Infinity) => {
-  const search = mock(async (query: string, chunk: number, chunkSize: number) => {
+  const search = vi.fn(async (query: string, chunk: number, chunkSize: number) => {
     let entries: Entry[] = [];
     if (chunk <= lastChunk) {
       entries = Array.from({ length: chunkSize }, (_, row) => ({

@@ -8,13 +8,13 @@ The list of mirrors is still fetched from the original project's [configuration]
 
 ### Terminal
 
-Requires [Node.js](https://nodejs.org) 18+ to run, and [Bun](https://bun.sh) to build.
+Requires [Node.js](https://nodejs.org) 20+ and npm.
 
 ```
 git clone https://github.com/Jaxx497/libgen-downloader
 cd libgen-downloader
-bun install
-bun run build
+npm install
+npm run build
 npm install -g .
 lgd
 ```

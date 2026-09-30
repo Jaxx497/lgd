@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { Writable } from "node:stream";
@@ -77,14 +77,14 @@ const installNetworkFixture = () => {
     },
     { preconnect() {} }
   );
-  const fetchMock = spyOn(globalThis, "fetch").mockImplementation(fixtureFetch);
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(fixtureFetch);
 
   return { fetchMock, requestedURLs, requestSignals, requestHeaders };
 };
 
 const installFilesystemFixture = () => {
   const downloadedChunks: Buffer[] = [];
-  const createWriteStream = spyOn(fs, "createWriteStream").mockImplementation(() => {
+  const createWriteStream = vi.spyOn(fs, "createWriteStream").mockImplementation(() => {
     return new Writable({
       write(chunk: Buffer, _encoding, callback) {
         downloadedChunks.push(Buffer.from(chunk));
@@ -92,7 +92,7 @@ const installFilesystemFixture = () => {
       },
     }) as fs.WriteStream;
   });
-  const writeFile = spyOn(fs.promises, "writeFile").mockImplementation(async () => {});
+  const writeFile = vi.spyOn(fs.promises, "writeFile").mockImplementation(async () => {});
 
   return { createWriteStream, downloadedChunks, writeFile };
 };
@@ -108,20 +108,20 @@ beforeEach(() => {
       CLIMode: false,
       mirror: { src: BASE_URL, type: "libgen-plus" },
       mirrorAdapter: new LibgenPlusAdapter(BASE_URL),
-      setWarningMessage: mock(() => {}),
+      setWarningMessage: vi.fn(() => {}),
     },
     true
   );
 });
 
 afterEach(() => {
-  mock.restore();
+  vi.restoreAllMocks();
   useBoundStore.setState(originalStoreState, true);
 });
 
 describe("download queue integration", () => {
   it("deduplicates entries before starting the queue", () => {
-    const iterateQueue = mock(async () => {});
+    const iterateQueue = vi.fn(async () => {});
     useBoundStore.setState({ iterateQueue });
     const entry = createEntry("entry-1", "success");
 
@@ -174,7 +174,7 @@ describe("download queue integration", () => {
 
 describe("quit guard", () => {
   it("quits immediately when nothing is downloading", () => {
-    const handleExit = mock(() => {});
+    const handleExit = vi.fn(() => {});
     useBoundStore.setState({ handleExit });
 
     useBoundStore.getState().requestQuit();
@@ -183,7 +183,7 @@ describe("quit guard", () => {
   });
 
   it("asks first while downloads are active, and quits on the second request", () => {
-    const handleExit = mock(() => {});
+    const handleExit = vi.fn(() => {});
     useBoundStore.setState({ handleExit, inDownloadQueueEntryIds: ["entry-1"] });
 
     useBoundStore.getState().requestQuit();
@@ -239,8 +239,8 @@ describe("downloads panel actions", () => {
 
 describe("bulk download integration", () => {
   it("builds the queue from a CLI MD5 list, processes it, then exits", async () => {
-    const operateBulkDownloadQueue = mock(async () => {});
-    const handleExit = mock(() => {});
+    const operateBulkDownloadQueue = vi.fn(async () => {});
+    const handleExit = vi.fn(() => {});
     useBoundStore.setState({ CLIMode: true, operateBulkDownloadQueue, handleExit });
 
     await useBoundStore.getState().startBulkDownloadInCLI(["aaa", "bbb"]);
