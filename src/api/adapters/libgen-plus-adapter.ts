@@ -64,7 +64,9 @@ export class LibgenPlusAdapter {
 
   getSearchURL(query: string, pageNumber: number, pageSize: number): string {
     const url = new URL("/index.php", this.baseURL);
-    url.searchParams.set("req", query);
+    // libgen indexes ISBNs without hyphens, so "978-1-119-29349-1" finds nothing
+    const bare = query.replace(/[-\s]/g, "");
+    url.searchParams.set("req", /^(\d{9}[\dX]|\d{13})$/i.test(bare) ? bare : query);
     url.searchParams.set("page", pageNumber.toString());
     url.searchParams.set("res", pageSize.toString());
     return url.toString();
