@@ -65,25 +65,8 @@ export default function Settings() {
   };
 
   return (
-    <div className="card">
-      <div className="title">Download folder</div>
-      <div className="authors">{folder?.name ?? "Downloads"}</div>
-      <div className="row">
-        <button className="ghost" disabled={!folder} onClick={reset}>
-          Use Downloads
-        </button>
-        <button onClick={choose}>Choose folder</button>
-      </div>
-      {error && <div className="status bad">{error}</div>}
-      <div className="title">Preferred language</div>
-      <div className="authors">Books in this language are listed first</div>
-      <select value={language} onChange={(event) => chooseLanguage(event.target.value)}>
-        <option value="">None</option>
-        {LANGUAGES.map((name) => (
-          <option key={name}>{name}</option>
-        ))}
-      </select>
-      <label className="switch">
+    <div className="panel">
+      <label className="setting">
         <span className="title">Dark mode</span>
         <input
           type="checkbox"
@@ -92,7 +75,32 @@ export default function Settings() {
           onChange={(event) => toggleDark(event.target.checked)}
         />
       </label>
-      <div className="authors">
+      <label className="setting">
+        <span className="text">
+          <span className="title">Preferred language</span>
+          <span className="authors">Listed first in results</span>
+        </span>
+        <select value={language} onChange={(event) => chooseLanguage(event.target.value)}>
+          <option value="">None</option>
+          {LANGUAGES.map((name) => (
+            <option key={name}>{name}</option>
+          ))}
+        </select>
+      </label>
+      <div className="setting stack">
+        <span className="text">
+          <span className="title">Download folder</span>
+          <span className="authors">{folder?.name ?? "Downloads"}</span>
+        </span>
+        <div className="row">
+          <button className="ghost" disabled={!folder} onClick={reset}>
+            Use Downloads
+          </button>
+          <button onClick={choose}>Choose folder</button>
+        </div>
+        {error && <div className="status bad">{error}</div>}
+      </div>
+      <div className="version">
         libgen-dl v{version}
         {newer && (
           <>

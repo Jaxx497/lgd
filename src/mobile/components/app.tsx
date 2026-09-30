@@ -35,25 +35,28 @@ export default function App() {
       <header>
         {/* its own row, so the search field gets the full width */}
         <nav className="toolbar">
-          <button
-            type="button"
-            className="ghost"
-            aria-label="Downloads"
-            aria-pressed={showDownloads}
-            onClick={() => setShowDownloads(!showDownloads)}
-          >
-            <svg {...SVG}>{DOWNLOADS}</svg>
-            {running > 0 && <span className="count">{running}</span>}
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            aria-label="Settings"
-            aria-pressed={showSettings}
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            <svg {...SVG}>{SETTINGS}</svg>
-          </button>
+          <span className="brand">libgen-dl</span>
+          <div className="actions">
+            <button
+              type="button"
+              className="ghost"
+              aria-label="Downloads"
+              aria-pressed={showDownloads}
+              onClick={() => setShowDownloads(!showDownloads)}
+            >
+              <svg {...SVG}>{DOWNLOADS}</svg>
+              {running > 0 && <span className="count">{running}</span>}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              aria-label="Settings"
+              aria-pressed={showSettings}
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              <svg {...SVG}>{SETTINGS}</svg>
+            </button>
+          </div>
         </nav>
         <form onSubmit={submit}>
           <input
