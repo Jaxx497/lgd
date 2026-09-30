@@ -1,30 +1,31 @@
 # lgd
 
-`lgd` is a terminal app for searching and downloading books from **LibGen** mirrors.
-
-It is a personal fork of [libgen-downloader](https://github.com/obsfx/libgen-downloader) by Ömercan Balandı, licensed under the WTFPL (see `LICENSE`). The original's history is kept at the bottom of this file.
+A fork of [libgen-downloader](https://github.com/obsfx/libgen-downloader) by Ömercan Balandı (WTFPL, see `LICENSE`) that focuses on quality-of-life improvements to the terminal app, plus an Android port.
 
 The list of mirrors is still fetched from the original project's [configuration](https://github.com/obsfx/libgen-downloader/blob/configuration/config.v3.json) branch. To find mirrors yourself, see https://open-slum.org/.
 
-## Build
+## Install
 
-Requires [Bun](https://bun.sh).
+### Terminal
+
+Requires [Node.js](https://nodejs.org) 18+ to run, and [Bun](https://bun.sh) to build.
 
 ```
+git clone https://github.com/Jaxx497/libgen-downloader
+cd libgen-downloader
 bun install
-bun run compile:linux-x64   # or compile:macos-arm64, compile:windows-x64, ...
+bun run build
+npm install -g .
+lgd
 ```
 
-The binary is written to `standalone-executables/lgd-<os>-<arch>`.
+Or download a standalone executable for your platform from the [Releases](https://github.com/Jaxx497/libgen-downloader/releases) page (no Node needed).
 
-## Android
+### Android
 
-A small Capacitor app shares the search and download logic with the TUI (`src/mobile/`).
-The **Android APK** workflow builds a debug APK on GitHub; run it from the Actions tab and
-download `lgd-debug-apk`. Locally, `bun run web` bundles the UI into `www/`.
+Download the APK from the [Releases](https://github.com/Jaxx497/libgen-downloader/releases) page and open it on your phone (allow installing from your browser or file manager when asked).
 
-Files are saved to the phone's Downloads folder; the ⚙ button picks a different folder.
-**Open** launches a finished file in a reader app.
+Downloads are saved to the phone's Downloads folder; the ⚙ button picks a different one. **Open** launches a finished file in a reader app.
 
 ## Usage
 
@@ -40,7 +41,9 @@ lgd -h                        help
 
 `-b` and `-d` exit with code 1 if any download failed.
 
-### Keys (results list)
+### Keys
+
+Results list:
 
 | Key | Action |
 |---|---|
@@ -49,13 +52,32 @@ lgd -h                        help
 | `Ctrl-d` `Ctrl-u`, `PgDn` `PgUp` | half page / page |
 | `<n>` then `Enter` (or `<n>G`) | jump to row n |
 | `Enter` / `d` | download |
-| `i` / `l` / `→` | info (`h` / `←` / `Esc` back) |
+| `i` / `l` / `→` | info |
 | `]` `[` (or `n` `p`) | next / previous page (on a short filtered page `]` looks further) |
 | `f` | filter by filetype (`pdf,epub`; empty for all) |
-| `t` | downloads panel (`x` remove queued, `r` retry failed, `c` clear finished) |
+| `t` | downloads panel |
 | `/` / `Esc` | new search (previous query pre-filled) |
 | `?` | help |
 | `q` / `Ctrl-c` | quit (asks first while downloads are running) |
+
+Info view:
+
+| Key | Action |
+|---|---|
+| `Enter` / `d` | download |
+| `h` / `←` / `Esc` | back to the results |
+| `t` | downloads panel |
+| `q` | quit |
+
+Downloads panel:
+
+| Key | Action |
+|---|---|
+| `j` `k` / `↓` `↑` | move |
+| `x` | remove a queued download |
+| `r` | retry a failed download |
+| `c` | clear finished downloads |
+| `t` / `h` / `Esc` | close |
 
 Existing files are never overwritten: a second copy is saved as `name(1).ext`.
 
@@ -77,64 +99,3 @@ Existing files are never overwritten: a second copy is saved as `name(1).ext`.
 ```
 
 Command-line flags override the file.
-
-## History (original libgen-downloader)
-
-v3.0.0
-
-- Added new `libgen+` mirrors as primary source. App is now usable as long as the `libgen+` mirrors are available.
-- Dropped `search by` filtering options to make it compatible with the new `libgen+` mirrors.
-- Dropped `alternative downloads` feature to make it compatible with the new `libgen+` mirrors.
-
----
-
-v2.0.0
-
-- Added alternative downloads.
-- Added new download progress indicators.
-- Added a cache mechanism to quickly retrieve previously searched results..
-- Added new CLI parameter `-s, --search` to search queries directly in the command line.
-- Added new shortcut keys to simplify usage:
-	- `[J]` and `[K]` to move up and down for vimmers.
-	- `[TAB]` to add an entry to the bulk download queue.
-	- `[D]` to download an entry directly.
-- Dropped result filtering. Instead added `Search by` filtering options to filter in columns like the original libgen search functionality.
-
----
-
-v1.3.7
-
-- Changed cli module and usage.
-- Refactored downloading processes.
-- README simplified.
-
----
-
-v1.3
-
-- Whole app was rewritten using `React`, `Ink` and `Zustand`.
-- Added result filtering.
-- Now you do not have to wait while downloading files using the `direct download` option.
-- New version notifier.
-- Due to the https://gen.lib.rus.ec is banned in my country, now libgen-downloader fetches the latest configuration file from the [configuration](https://github.com/obsfx/libgen-downloader/tree/configuration) branch and finds an available mirror dynamically.
-
----
-
-v1.2
-
-- Direct download option added as a cli functionality.
-
----
-
-v1.1
-
-- New and mostly resizeable UI.
-
----
-
-v1.0
-
-- Addded bulk downloading
-- Improved error handling.
-- When a connection error occurs, `libgen-downloader` does not shut down instantly. It tries 5 times to do same request with 3 seconds of delay.
-- New customized UI module.
