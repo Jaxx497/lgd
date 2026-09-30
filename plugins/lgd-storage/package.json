@@ -1,0 +1,11 @@
+{
+  "name": "lgd-storage",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Publishes a downloaded file into Downloads or a folder the user picked (Android)",
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  }
+}

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
-    paths: ["src/**", "scripts/**", "capacitor.config.ts", "package.json", "bun.lock", ".github/workflows/android.yml"]
+    paths: ["src/**", "scripts/**", "plugins/**", "capacitor.config.ts", "package.json", "bun.lock", ".github/workflows/android.yml"]
 
 permissions:
   contents: read

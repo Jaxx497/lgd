@@ -2,6 +2,7 @@
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { FileTransfer } from "@capacitor/file-transfer";
 import { LIBGEN_USER_AGENT } from "../../settings";
+import { getFolder, mimeFor, Storage } from "../storage";
 
 export const removePartialDownloads = () => {};
 
@@ -15,9 +16,12 @@ const exists = (path: string) =>
     () => false
   );
 
+// Where each finished download ended up (a content:// URI), for the Open button.
+export const savedUris = new Map<string, string>();
+
 // ponytail: the file is named after the Entry (the mirror's content-disposition needs a request
-// the native downloader doesn't expose), and lands in the app cache, from where the UI hands it
-// to the share sheet. Android blocks direct writes to Downloads; MediaStore is the upgrade path.
+// the native downloader doesn't expose). It downloads into the app cache, then the Storage plugin
+// copies it to Downloads or the folder chosen in settings.
 export async function saveFromUrl(arguments_: {
   url: string;
   filename: string;
@@ -60,5 +64,18 @@ export async function saveFromUrl(arguments_: {
     throw error;
   } finally {
     await listener.remove();
+  }
+
+  try {
+    const published = await Storage.publish({
+      path: uri,
+      name: filename,
+      mime: mimeFor(filename),
+      tree: getFolder()?.uri,
+    });
+    savedUris.set(filename, published.uri);
+  } catch (error) {
+    await Filesystem.deleteFile({ path: filename, directory: Directory.Cache }).catch(() => {});
+    throw error;
   }
 }

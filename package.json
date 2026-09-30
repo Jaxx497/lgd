@@ -50,8 +50,13 @@
     "url": "https://github.com/Jaxx497/libgen-downloader.git"
   },
   "devDependencies": {
+    "@capacitor-community/file-opener": "^8.0.1",
     "@capacitor/android": "^8.5.2",
     "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/file-transfer": "^2.0.5",
+    "@capacitor/filesystem": "^8.1.3",
+    "@capacitor/share": "^8.0.2",
     "@eslint/js": "^10.0.1",
     "@types/bun": "^1.3.14",
     "@types/content-disposition": "^0.5.9",
@@ -65,17 +70,14 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unicorn": "^63.0.0",
+    "lgd-storage": "file:plugins/lgd-storage",
     "prettier": "^3.7.4",
+    "react-dom": "19.2.3",
     "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
-    "@capacitor-community/file-opener": "^8.0.1",
-    "@capacitor/core": "^8.5.2",
-    "@capacitor/file-transfer": "^2.0.5",
-    "@capacitor/filesystem": "^8.1.3",
-    "@capacitor/share": "^8.0.2",
     "content-disposition": "^1.0.1",
     "figures": "^6.1.0",
     "filesize": "^11.0.13",
@@ -85,7 +87,6 @@
     "linkedom": "^0.18.12",
     "meow": "^14.0.0",
     "react": "^19.2.3",
-    "react-dom": "19.2.3",
     "zustand": "^5.0.9"
   }
 }

@@ -1,26 +1,22 @@
-import { Directory, Filesystem } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
 import { Share } from "@capacitor/share";
 import type { Entry } from "../../api/models/entry";
 import { DownloadStatus } from "../../download-status";
+import { savedUris } from "../stubs/download";
+import { mimeFor } from "../storage";
 import { getDownloadProgress } from "../../tui/helpers/progress";
 import { useBoundStore } from "../../tui/store";
 
-const MIME: Record<string, string> = {
-  epub: "application/epub+zip",
-  pdf: "application/pdf",
-  mobi: "application/x-mobipocket-ebook",
-  djvu: "image/vnd.djvu",
-};
-
-// The file lives in the app cache, which no file browser can reach, so open it in a reader app
-// (chooser); with no reader installed, fall back to the share sheet.
-const open = async (filename: string, extension: string) => {
-  const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache });
+// Open the saved file in a reader app (chooser); with none installed, offer the share sheet.
+const open = async (filename: string) => {
+  const uri = savedUris.get(filename);
+  if (!uri) {
+    return;
+  }
   try {
     await FileOpener.open({
       filePath: uri,
-      contentType: MIME[extension.toLowerCase()] ?? "application/octet-stream",
+      contentType: mimeFor(filename),
       openWithDefault: false,
     });
   } catch {
@@ -46,7 +42,7 @@ export default function Card({ entry }: { entry: Entry }) {
       break;
     }
     case DownloadStatus.DOWNLOADED: {
-      action = <button onClick={() => open(download.filename, entry.extension)}>Open</button>;
+      action = <button onClick={() => open(download.filename)}>Open</button>;
       label = "Downloaded";
       tone = " ok";
       break;

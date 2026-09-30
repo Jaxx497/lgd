@@ -31,3 +31,6 @@ CLAUDE.md
 /.github
 AGENTS.md
 tsconfig.json
+/plugins
+/scripts
+capacitor.config.ts
