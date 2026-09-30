@@ -4,7 +4,7 @@ import Label from "../../labels";
 import { attempt } from "../../utilities";
 import { LibgenPlusAdapter } from "../../api/adapters/libgen-plus-adapter";
 import { getDocument } from "../../api/data/document";
-import { SEARCH_PAGE_SIZE } from "../../settings";
+import { FALLBACK_MIRRORS, SEARCH_PAGE_SIZE } from "../../settings";
 import { MirrorCheckStatus } from "./app";
 import { defaultConfig, type UserConfig } from "../../user-config";
 
@@ -48,18 +48,12 @@ export const createConfigStateSlice = (set: SetState, get: GetState) => ({
 
     // The user's preferred mirror goes first, and still works if the remote list is unreachable.
     const preferred = store.userConfig.mirror;
-    const mirrors: Mirror[] = (config?.mirrors ?? []).filter(
+    const mirrors: Mirror[] = (config?.mirrors.length ? config.mirrors : FALLBACK_MIRRORS).filter(
       // libgen-plus is the only mirror type lgd can parse
       (mirror) => mirror.type === "libgen-plus" && mirror.src !== preferred
     );
     if (preferred) {
       mirrors.unshift({ src: preferred, type: "libgen-plus" });
-    }
-
-    if (mirrors.length === 0) {
-      store.setIsLoading(false);
-      store.setErrorMessage("Couldn't fetch the config");
-      return;
     }
 
     // Find an available mirror
@@ -77,7 +71,7 @@ export const createConfigStateSlice = (set: SetState, get: GetState) => ({
     store.setIsLoading(false);
 
     if (!mirror) {
-      store.setErrorMessage("Couldn't find a working mirror");
+      store.setErrorMessage("Couldn't reach LibGen. Check your internet connection.");
       return;
     }
 

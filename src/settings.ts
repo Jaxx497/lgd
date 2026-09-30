@@ -5,6 +5,15 @@ import { version } from "../package.json";
 export const CONFIGURATION_URL =
   "https://raw.githubusercontent.com/obsfx/libgen-downloader/configuration/config.v3.json";
 
+// Used when the config above can't be fetched (e.g. old Android without current TLS roots).
+export const FALLBACK_MIRRORS = [
+  "libgen.li",
+  "libgen.vg",
+  "libgen.gl",
+  "libgen.bz",
+  "libgen.la",
+].map((host) => ({ src: `https://${host}/`, type: "libgen-plus" as const }));
+
 export const FAIL_REQ_ATTEMPT_COUNT = 5;
 export const FAIL_REQ_ATTEMPT_DELAY_MS = 2000;
 export const REQUEST_TIMEOUT_MS = 10_000;
