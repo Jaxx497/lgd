@@ -30,7 +30,7 @@ export interface IDownloadQueueState {
     downloadProgress: Partial<IDownloadProgress>
   ) => void;
   addDownloadProgress: (entryId: string, bytes: number) => void;
-  removeQueuedDownload: (entryId: string) => void;
+  stopDownload: (entryId: string) => void;
   clearFinishedDownloads: () => void;
 }
 
@@ -41,6 +41,9 @@ export const initialDownloadQueueState = {
   downloads: [],
   isQueueActive: false,
 };
+
+// The running download's stop handle. One at a time: the queue is serial.
+let activeDownload: { id: string; controller: AbortController } | undefined;
 
 export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => ({
   ...initialDownloadQueueState,
@@ -106,6 +109,8 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
         break;
       }
 
+      const controller = new AbortController();
+      activeDownload = { id: entry.id, controller };
       try {
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.CONNECTING_TO_LIBGEN,
@@ -117,7 +122,9 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
           throw new Error(`Couldn't get the detail page URL for "${entry.title}"`);
         }
 
-        const mirrorPageResult = await attempt((signal) => getDocument(detailPageUrl, signal));
+        const mirrorPageResult = await attempt((signal) => getDocument(detailPageUrl, signal), {
+          signal: controller.signal,
+        });
         if (!mirrorPageResult) {
           throw new Error(`Couldn't fetch the mirror page for "${entry.title}"`);
         }
@@ -139,18 +146,25 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
             store.updateCurrentDownloadProgress(entry.id, { filename, progress: 0, total });
           },
           onProgress: (bytes) => store.addDownloadProgress(entry.id, bytes),
+          signal: controller.signal,
         });
 
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.DOWNLOADED,
         });
       } catch (error) {
+        if (controller.signal.aborted) {
+          // stopped by the user: back to a plain result, as if it was never queued
+          forget(set, entry.id);
+          continue;
+        }
         store.setWarningMessage((error as Error).message);
         store.updateCurrentDownloadProgress(entry.id, {
           status: DownloadStatus.FAILED,
           error: (error as Error).message,
         });
       } finally {
+        activeDownload = undefined;
         store.removeEntryIdFromDownloadQueue(entry.id);
       }
     }
@@ -182,21 +196,22 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
     });
   },
 
-  // Only waiting downloads can be removed; the active one has no abort hook.
-  removeQueuedDownload: (entryId: string) => {
+  // Stops the running download, or drops a waiting one.
+  stopDownload: (entryId: string) => {
+    if (activeDownload?.id === entryId) {
+      activeDownload.controller.abort();
+      return;
+    }
+
     const store = get();
     if (!store.downloadQueue.some((entry) => entry.id === entryId)) {
       return;
     }
-
-    const downloadProgressMap = { ...store.downloadProgressMap };
-    delete downloadProgressMap[entryId];
     set({
       downloadQueue: store.downloadQueue.filter((entry) => entry.id !== entryId),
       inDownloadQueueEntryIds: store.inDownloadQueueEntryIds.filter((id) => id !== entryId),
-      downloads: store.downloads.filter((entry) => entry.id !== entryId),
-      downloadProgressMap,
     });
+    forget(set, entryId);
   },
 
   // Drops finished and failed downloads from the panel; the results table keeps its ✓ / ✗.
@@ -209,3 +224,14 @@ export const createDownloadQueueStateSlice = (set: SetState, get: GetState) => (
     });
   },
 });
+
+const forget = (set: SetState, entryId: string) => {
+  set((previous) => {
+    const downloadProgressMap = { ...previous.downloadProgressMap };
+    delete downloadProgressMap[entryId];
+    return {
+      downloadProgressMap,
+      downloads: previous.downloads.filter((entry) => entry.id !== entryId),
+    };
+  });
+};

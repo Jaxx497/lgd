@@ -74,7 +74,7 @@ Downloads panel:
 | Key | Action |
 |---|---|
 | `j` `k` / `↓` `↑` | move |
-| `x` | remove a queued download |
+| `x` | stop a download (running or queued) |
 | `r` | retry a failed download |
 | `c` | clear finished downloads |
 | `t` / `h` / `Esc` | close |

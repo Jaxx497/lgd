@@ -10,28 +10,37 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import androidx.activity.result.ActivityResult;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
-// Copies a finished download out of the app cache into a place the user can reach: the public
-// Downloads folder (MediaStore, no permission needed) or a folder picked through the system
-// picker (which stays granted across restarts).
-@CapacitorPlugin(name = "Storage")
+// Downloads a file into the app cache (resuming dropped connections, stoppable), then copies it out
+// into a place the user can reach: the public Downloads folder (MediaStore, no permission needed)
+// or a folder picked through the system picker (which stays granted across restarts).
+@CapacitorPlugin(
+    name = "Storage",
+    permissions = @Permission(alias = "storage", strings = { Manifest.permission.WRITE_EXTERNAL_STORAGE })
+)
 public class StoragePlugin extends Plugin {
 
     private static final int GRANT =
@@ -56,22 +65,169 @@ public class StoragePlugin extends Plugin {
         call.resolve();
     }
 
-    // Straight to the notification manager: starting the service again from the background is restricted.
-    @PluginMethod
-    public void updateKeepAlive(PluginCall call) {
-        getContext()
-            .getSystemService(NotificationManager.class)
-            .notify(
-                DownloadService.ID,
-                DownloadService.build(getContext(), call.getString("text", "Downloading"), call.getInt("percent", -1))
-            );
-        call.resolve();
-    }
-
     @PluginMethod
     public void stopKeepAlive(PluginCall call) {
         getContext().stopService(new Intent(getContext(), DownloadService.class));
         call.resolve();
+    }
+
+    private static final int ATTEMPTS = 5;
+
+    // One download at a time (the queue is serial): these belong to the running one.
+    private volatile boolean stopped;
+    private volatile HttpURLConnection connection;
+
+    @PluginMethod
+    public void download(PluginCall call) {
+        // Android 9 and older: publish() writes into the public Downloads folder directly. Ask now,
+        // while the app is on screen, not when the download finishes.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && getPermissionState("storage") != PermissionState.GRANTED) {
+            requestPermissionForAlias("storage", call, "storagePermission");
+            return;
+        }
+        startDownload(call);
+    }
+
+    // Denied: download anyway; publishing to Downloads then fails with the reason on the card.
+    @PermissionCallback
+    private void storagePermission(PluginCall call) {
+        startDownload(call);
+    }
+
+    @PluginMethod
+    public void stopDownload(PluginCall call) {
+        stopped = true;
+        HttpURLConnection http = connection;
+        if (http != null) {
+            http.disconnect(); // unblocks a read waiting on the network
+        }
+        call.resolve();
+    }
+
+    private void startDownload(PluginCall call) {
+        String url = call.getString("url");
+        File file = new File(Uri.parse(call.getString("path")).getPath());
+        String label = call.getString("label", "Downloading");
+        String agent = call.getString("userAgent");
+        stopped = false;
+
+        // Its own thread: the plugin thread is shared by every plugin call, stopDownload included.
+        new Thread(() -> {
+            try {
+                fetch(url, file, label, agent);
+                call.resolve();
+            } catch (Exception exception) {
+                file.delete();
+                call.reject(stopped ? "Stopped" : String.valueOf(exception.getMessage()));
+            }
+        }).start();
+    }
+
+    // A dropped or stalled connection is retried, resuming where it stopped when the server honors
+    // Range requests (and starting over when it doesn't).
+    private void fetch(String url, File file, String label, String agent) throws IOException, InterruptedException {
+        file.delete();
+        IOException last = null;
+        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
+            if (attempt > 0) {
+                Thread.sleep(3000);
+            }
+            if (stopped) {
+                throw new IOException("Stopped");
+            }
+            try {
+                transfer(url, file, label, agent);
+                return;
+            } catch (IOException exception) {
+                last = exception;
+            }
+        }
+        throw last;
+    }
+
+    private void transfer(String url, File file, String label, String agent) throws IOException {
+        long offset = file.length();
+        HttpURLConnection http = open(url, offset, agent);
+        try {
+            int code = http.getResponseCode();
+            if (code != HttpURLConnection.HTTP_OK && code != HttpURLConnection.HTTP_PARTIAL) {
+                throw new IOException("HTTP " + code);
+            }
+            boolean resumed = code == HttpURLConnection.HTTP_PARTIAL;
+            if (!resumed) {
+                offset = 0;
+            }
+            long length = http.getContentLengthLong();
+            long total = length < 0 ? -1 : offset + length;
+
+            try (InputStream in = http.getInputStream(); OutputStream out = new FileOutputStream(file, resumed)) {
+                byte[] buffer = new byte[64 * 1024];
+                long bytes = offset;
+                long reported = 0;
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    if (stopped) {
+                        throw new IOException("Stopped");
+                    }
+                    out.write(buffer, 0, read);
+                    bytes += read;
+                    long now = SystemClock.elapsedRealtime();
+                    if (now - reported >= 500) {
+                        reported = now;
+                        report(bytes, total, label);
+                    }
+                }
+                report(bytes, total, label);
+                if (total >= 0 && bytes < total) {
+                    throw new IOException("Connection closed early");
+                }
+            }
+        } finally {
+            http.disconnect();
+            connection = null;
+        }
+    }
+
+    // Follows redirects by hand: HttpURLConnection won't follow one that switches http <-> https.
+    private HttpURLConnection open(String url, long offset, String agent) throws IOException {
+        URL target = new URL(url);
+        for (int hop = 0; hop < 5; hop++) {
+            HttpURLConnection http = (HttpURLConnection) target.openConnection();
+            connection = http;
+            http.setInstanceFollowRedirects(false);
+            http.setConnectTimeout(30_000);
+            http.setReadTimeout(60_000);
+            if (agent != null) {
+                http.setRequestProperty("User-Agent", agent);
+            }
+            if (offset > 0) {
+                http.setRequestProperty("Range", "bytes=" + offset + "-");
+            }
+            int code = http.getResponseCode();
+            String location = http.getHeaderField("Location");
+            if (code < 300 || code >= 400 || location == null) {
+                return http;
+            }
+            http.disconnect();
+            target = new URL(target, location);
+        }
+        throw new IOException("Too many redirects");
+    }
+
+    // To the page (throttled with the app in the background, so it can lag) and straight to the
+    // notification, which doesn't depend on the page.
+    private void report(long bytes, long total, String label) {
+        JSObject status = new JSObject();
+        status.put("bytes", bytes);
+        status.put("total", total);
+        notifyListeners("downloadProgress", status);
+
+        if (DownloadService.running) {
+            int percent = total > 0 ? (int) (bytes * 100 / total) : -1;
+            getContext()
+                .getSystemService(NotificationManager.class)
+                .notify(DownloadService.ID, DownloadService.build(getContext(), label, percent));
+        }
     }
 
     @PluginMethod

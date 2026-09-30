@@ -110,8 +110,11 @@ export async function saveFromUrl(arguments_: {
   filename: string; // ignored here: the mirror's content-disposition names the file
   onStart: (filename: string, total: number) => void;
   onProgress: (bytes: number) => void;
+  signal: AbortSignal; // stops the download; the partial file is removed
 }): Promise<void> {
-  const downloadStream = await attempt((signal) => fetchLibgen(arguments_.url, signal));
+  const downloadStream = await attempt((signal) => fetchLibgen(arguments_.url, signal), {
+    signal: arguments_.signal,
+  });
   if (!downloadStream) {
     throw new Error("Couldn't fetch the download stream");
   }

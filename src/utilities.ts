@@ -12,6 +12,9 @@ export interface AttemptOptions {
   attemptCount?: number;
   delayMs?: number;
   timeoutMs?: number;
+  // Aborting it stops the current try and any retries. It stays wired to the returned value's
+  // request too, so a response body still streaming can be stopped with it.
+  signal?: AbortSignal;
 }
 
 export async function attempt<T>(
@@ -23,8 +26,12 @@ export async function attempt<T>(
   const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
 
   for (let index = 0; index < attemptCount; index++) {
+    if (options.signal?.aborted) {
+      return undefined;
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    options.signal?.addEventListener("abort", () => controller.abort(), { once: true });
 
     try {
       return await callback(controller.signal);
@@ -34,7 +41,7 @@ export async function attempt<T>(
       clearTimeout(timeout);
     }
 
-    if (index + 1 < attemptCount) {
+    if (index + 1 < attemptCount && !options.signal?.aborted) {
       await delay(delayMs);
     }
   }

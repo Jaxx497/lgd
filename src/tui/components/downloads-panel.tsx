@@ -51,7 +51,7 @@ export function DownloadsPanel() {
   const isEditingFilter = useBoundStore((state) => state.isEditingFilter);
   const quitPromptVisible = useBoundStore((state) => state.quitPromptVisible);
   const pushDownloadQueue = useBoundStore((state) => state.pushDownloadQueue);
-  const removeQueuedDownload = useBoundStore((state) => state.removeQueuedDownload);
+  const stopDownload = useBoundStore((state) => state.stopDownload);
   const clearFinishedDownloads = useBoundStore((state) => state.clearFinishedDownloads);
 
   const [cursor, setCursor] = useState(0);
@@ -84,7 +84,7 @@ export function DownloadsPanel() {
       } else if (input === "k" || key.upArrow) {
         setCursor(Math.max(selected - 1, 0));
       } else if (input === "x" && entry) {
-        removeQueuedDownload(entry.id);
+        stopDownload(entry.id);
       } else if (
         input === "r" &&
         entry &&

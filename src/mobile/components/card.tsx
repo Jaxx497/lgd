@@ -27,6 +27,7 @@ const open = async (filename: string) => {
 export default function Card({ entry }: { entry: Entry }) {
   const download = useBoundStore((s) => s.downloadProgressMap[entry.id]);
   const push = useBoundStore((s) => s.pushDownloadQueue);
+  const stop = useBoundStore((s) => s.stopDownload);
   const status = download?.status;
   const { progressPercentage, downloadedSize, totalSize } = getDownloadProgress(
     download?.progress ?? 0,
@@ -54,11 +55,12 @@ export default function Card({ entry }: { entry: Entry }) {
       break;
     }
     case DownloadStatus.IN_QUEUE: {
-      action = <button disabled>Queued</button>;
+      action = <button onClick={() => stop(entry.id)}>Stop</button>;
+      label = "Queued";
       break;
     }
     default: {
-      action = <button disabled>…</button>;
+      action = <button onClick={() => stop(entry.id)}>Stop</button>;
       label = "Connecting…";
       if (download.total) {
         label = `${downloadedSize} / ${totalSize}`;

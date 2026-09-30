@@ -25,7 +25,7 @@ export const SEARCH_HINTS: Hint[] = [
 ];
 export const PANEL_HINTS: Hint[] = [
   ["↑↓", "move"],
-  ["x", "remove"],
+  ["x", "stop"],
   ["r", "retry"],
   ["c", "clear"],
   ["t", "close"],

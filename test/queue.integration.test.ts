@@ -60,6 +60,28 @@ const installNetworkFixture = () => {
         );
       }
 
+      if (url.includes("/ads.php?md5=slow")) {
+        return new Response(
+          '<table id="main"><tr><td>Book</td><td><a href="/files/slow.epub">GET</a></td></tr></table>'
+        );
+      }
+
+      // sends a first chunk, then stalls until the request is aborted
+      if (url.endsWith("/files/slow.epub")) {
+        const body = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode("partial"));
+            init?.signal?.addEventListener("abort", () => controller.error(new Error("aborted")));
+          },
+        });
+        return new Response(body, {
+          headers: {
+            "content-disposition": 'attachment; filename="slow.epub"',
+            "content-length": "100",
+          },
+        });
+      }
+
       if (url.includes("/ads.php?md5=missing")) {
         return new Response("<main>Download link unavailable</main>");
       }
@@ -172,6 +194,34 @@ describe("download queue integration", () => {
   });
 });
 
+describe("stopping downloads", () => {
+  it("stops the running download mid-transfer and moves on", async () => {
+    installNetworkFixture();
+    installFilesystemFixture();
+    const slow = createEntry("slow", "slow");
+    const next = createEntry("next", "success");
+    useBoundStore.setState({
+      downloadQueue: [slow, next],
+      inDownloadQueueEntryIds: [slow.id, next.id],
+      downloads: [slow, next],
+    });
+
+    const queue = useBoundStore.getState().iterateQueue();
+    await vi.waitFor(() =>
+      expect(useBoundStore.getState().downloadProgressMap[slow.id]?.progress).toBe(7)
+    );
+    useBoundStore.getState().stopDownload(slow.id);
+    await queue;
+
+    const state = useBoundStore.getState();
+    expect(state.downloadProgressMap[slow.id]).toBeUndefined();
+    expect(state.downloads).toEqual([next]);
+    expect(state.downloadProgressMap[next.id]?.status).toBe(DownloadStatus.DOWNLOADED);
+    expect(state.inDownloadQueueEntryIds).toEqual([]);
+    expect(state.setWarningMessage).not.toHaveBeenCalled();
+  });
+});
+
 describe("quit guard", () => {
   it("quits immediately when nothing is downloading", () => {
     const handleExit = vi.fn(() => {});
@@ -208,7 +258,7 @@ describe("quit guard", () => {
 });
 
 describe("downloads panel actions", () => {
-  it("removes a queued download but not the active one", () => {
+  it("drops a queued download, and leaves one it isn't running alone", () => {
     const active = createEntry("active", "success");
     const queued = createEntry("queued", "success");
     useBoundStore.setState({
@@ -217,8 +267,8 @@ describe("downloads panel actions", () => {
       downloads: [active, queued],
     });
 
-    useBoundStore.getState().removeQueuedDownload(active.id);
-    useBoundStore.getState().removeQueuedDownload(queued.id);
+    useBoundStore.getState().stopDownload(active.id);
+    useBoundStore.getState().stopDownload(queued.id);
 
     const state = useBoundStore.getState();
     expect(state.downloads).toEqual([active]);

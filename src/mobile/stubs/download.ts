@@ -1,6 +1,5 @@
 // Mobile stand-in for api/data/download.ts (swapped in by scripts/build-web.ts).
 import { Directory, Filesystem } from "@capacitor/filesystem";
-import { FileTransfer } from "@capacitor/file-transfer";
 import { LIBGEN_USER_AGENT } from "../../settings";
 import { getFolder, mimeFor, Storage } from "../storage";
 
@@ -27,7 +26,11 @@ export async function saveFromUrl(arguments_: {
   filename: string;
   onStart: (filename: string, total: number) => void;
   onProgress: (bytes: number) => void;
+  signal: AbortSignal;
 }): Promise<void> {
+  if (arguments_.signal.aborted) {
+    throw new Error("Stopped");
+  }
   const clean = arguments_.filename.replaceAll(/[\\/:*?"<>|\s]+/g, " ").trim();
   const dot = clean.lastIndexOf(".");
   const stem = clean.slice(0, Math.min(dot, 100));
@@ -40,29 +43,31 @@ export async function saveFromUrl(arguments_: {
   arguments_.onStart(filename, 0);
   const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache });
 
-  // One event stream per download (the queue runs one at a time). onStart resets the progress, so
-  // call it once when the size is known, then report only what's new.
+  // onStart resets the progress, so call it again whenever the size changes (a retry that can't
+  // resume starts over), then report only what's new.
   let seen = 0;
-  let sized = false;
-  const listener = await FileTransfer.addListener("progress", (status) => {
-    if (!sized && status.lengthComputable) {
-      sized = true;
-      arguments_.onStart(filename, status.contentLength);
+  let size = 0;
+  const listener = await Storage.addListener("downloadProgress", ({ bytes, total }) => {
+    if (total > 0 && total !== size) {
+      size = total;
+      seen = 0;
+      arguments_.onStart(filename, total);
     }
-    arguments_.onProgress(status.bytes - seen);
-    seen = status.bytes;
+    arguments_.onProgress(bytes - seen);
+    seen = bytes;
   });
+  const stop = () => void Storage.stopDownload().catch(() => {});
+  arguments_.signal.addEventListener("abort", stop);
   try {
-    await FileTransfer.downloadFile({
+    // the native side deletes its partial file on failure
+    await Storage.download({
       url: arguments_.url,
       path: uri,
-      progress: true,
-      headers: { "User-Agent": LIBGEN_USER_AGENT },
+      label: filename,
+      userAgent: LIBGEN_USER_AGENT,
     });
-  } catch (error) {
-    await Filesystem.deleteFile({ path: filename, directory: Directory.Cache }).catch(() => {});
-    throw error;
   } finally {
+    arguments_.signal.removeEventListener("abort", stop);
     await listener.remove();
   }
 

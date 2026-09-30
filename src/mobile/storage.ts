@@ -1,11 +1,17 @@
-import { registerPlugin } from "@capacitor/core";
+import { registerPlugin, type PluginListenerHandle } from "@capacitor/core";
 
 // Native side: plugins/lgd-storage.
 interface StoragePlugin {
   pickFolder(): Promise<Folder>;
   startKeepAlive(options: { text: string; percent: number }): Promise<void>;
-  updateKeepAlive(options: { text: string; percent: number }): Promise<void>;
   stopKeepAlive(): Promise<void>;
+  // Rejects with "Stopped" after stopDownload. total is -1 when the server doesn't say.
+  download(options: { url: string; path: string; label: string; userAgent: string }): Promise<void>;
+  stopDownload(): Promise<void>;
+  addListener(
+    eventName: "downloadProgress",
+    listener: (status: { bytes: number; total: number }) => void
+  ): Promise<PluginListenerHandle>;
   publish(options: {
     path: string;
     name: string;
